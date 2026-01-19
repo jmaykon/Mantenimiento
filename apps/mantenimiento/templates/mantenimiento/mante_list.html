@@ -1,0 +1,268 @@
+{% load static %}
+
+{% block content %}
+<div class="tickets-container" id="tickets-container" data-url-atender="{% url 'mantenimiento:atender_ticket' %}">
+
+    {% for ticket in tickets %}
+
+    <!-- ===== INICIO TICKET ===== -->
+    <div class="ticket" id="ticket-{{ ticket.id_ticket }}" data-estado="{{ ticket.estado_ticket }}">
+
+        <!-- Columna Izquierda -->
+        <div class="stub">
+            <div class="text-center">
+                <span class="admit">Ticket</span>
+                <span class="line"></span>
+            </div>
+            <div class="number">{{ ticket.id_ticket }}</div>
+        </div>
+
+        <!-- Columna Centro -->
+        <div class="check">
+            <div class="big">{{ ticket.get_tipo_soporte_display }}</div>
+            <div class="number">{{ ticket.insumos_utilizados }}</div>
+            <div class="descripcion">
+                {{ ticket.descripcion }}
+            </div>
+
+            {% if ticket.descripcion|length > 100 %}
+            <button class="mt-2 text-blue-600 hover:underline font-medium btn-ver-mas"
+                data-descripcion="{{ ticket.descripcion|escapejs }}">
+                Mostrar descripción
+            </button>
+            {% endif %}
+
+            <div class="info">
+                <section>
+                    <div class="title">Fecha</div>
+                    <div>{{ ticket.fecha_creacion|date:"d/m/Y" }}</div>
+                </section>
+
+                <section>
+                    <div class="title">Usuario</div>
+                    <div>
+                        {{ ticket.id_users.nombre }}
+                        {{ ticket.id_users.apellido_p }}
+                        {{ ticket.id_users.apellido_m }}
+                    </div>
+                </section>
+
+                <section>
+                    <div class="title">Prioridad:<br>
+                        {% if ticket.prioridad == 'baja' %}
+                        <span class="baja px-0.5 py-0.5">Baja</span>
+                        {% elif ticket.prioridad == 'media' %}
+                        <span class="media px-0.5 py-0.5">Media</span>
+                        {% elif ticket.prioridad == 'alta' %}
+                        <span class="alta px-0.5 py-0.5">Alta</span>
+                        {% elif ticket.prioridad == 'urgente' %}
+                        <span class="urgente px-0.5 py-0.5">Urgente</span>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Columna Derecha -->
+        <div class="estado flex flex-col items-center p-4">
+            <div class="flex flex-col gap-1 mb-1">
+                {% if ticket.estado_ticket == 'completado' %}
+                <button class="btn-atender px-0.5 py-0.5 text-white rounded bg-gray-400 cursor-not-allowed" disabled>
+                    Completado
+                </button>
+                {% else %}
+                <button class="btn-atender px-0.5 py-0.5 text-white rounded bg-green-500 hover:bg-green-600"
+                    data-ticket-id="{{ ticket.id_ticket }}">
+                    Atender
+                </button>
+                {% endif %}
+
+                <button id="openModalBtn"
+                    class="px-0.5 py-0.5 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition">
+                    Aprobar
+                </button>
+
+
+                {% if ticket.estado_ticket == 'completado' %}
+                <button class="px-2 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 btn-ver-reporte"
+                    data-ticket-id="{{ ticket.id_ticket }}">
+                    Reporte
+                </button>
+                {% endif %}
+            </div>
+
+            <div class="status">
+                Estado:<br>
+                {% if ticket.estado_ticket == 'Pendiente' %}
+                <span class="pendiente">Pendiente</span>
+                {% elif ticket.estado_ticket == 'en_proceso' %}
+                <span class="en_proceso">En Proceso</span>
+                {% elif ticket.estado_ticket == 'documentando' %}
+                <span class="documentando">Documentando</span>
+                {% elif ticket.estado_ticket == 'completado' %}
+                <span class="completado">Completado</span>
+                {% elif ticket.estado_ticket == 'cancelado' %}
+                <span class="cancelado">Cancelado</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <!-- ===== FIN TICKET ===== -->
+
+    {% empty %}
+    <p class="text-center text-gray-500">
+        No hay tickets registrados
+    </p>
+    {% endfor %}
+
+</div>
+
+
+<!-- Modal descripción -->
+<div id="modal2" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
+    <div
+        class="bg-white rounded-xl w-11/12 max-w-4xl max-h-[90vh] p-6 shadow-lg relative overflow-y-auto overflow-x-hidden">
+
+        <!-- Cerrar -->
+        <button id="closeModal" class="absolute top-3 right-3 text-gray-500 hover:text-red-600 text-xl font-bold">
+            &times;
+        </button>
+
+        <h2 class="text-xl font-semibold mb-4 justify-center">Descripción del Usuario</h2>
+
+        <p id="descripcion-completa" class="text-gray-700 whitespace-pre-line text-justify"></p>
+
+    </div>
+</div>
+
+<!-- MODAL ATENDER -->
+<div id="modal" class="overflow-auto fixed inset-0 bg-black/50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-xl w-96 p-6 shadow-lg relative">
+
+        <h2 class="text-center text-xl font-semibold mb-6">
+            Atender Ticket
+        </h2>
+
+        <!-- Pasos -->
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex flex-col items-center step" data-step="1">
+                <div class="step-circle w-8 h-8 flex items-center justify-center rounded-full bg-gray-300">1</div>
+                <span class="mt-2 text-sm">Pendiente</span>
+            </div>
+
+            <div class="flex flex-col items-center step" data-step="2">
+                <div class="step-circle w-8 h-8 flex items-center justify-center rounded-full bg-gray-300">2</div>
+                <span class="mt-2 text-sm">En Proceso</span>
+            </div>
+
+            <div class="flex flex-col items-center step" data-step="3">
+                <div class="step-circle w-8 h-8 flex items-center justify-center rounded-full bg-gray-300">3</div>
+                <span class="mt-2 text-sm">Documentando</span>
+            </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="modal-body min-h-[200px]">
+            <div class="step-content" data-step="1">
+                <p class="text-gray-700">Ticket pendiente de atención.</p>
+            </div>
+
+            <div class="step-content hidden" data-step="2">
+                <p class="text-gray-700">Ticket en proceso de atención.</p>
+            </div>
+
+            <div class="step-content hidden" data-step="3">
+                <form id="formAtender" class="space-y-4">
+                    {% csrf_token %}
+                    <textarea class="diagnostico w-full border rounded-md p-2" placeholder="Diagnóstico"></textarea>
+                    <textarea class="solucion_aplicada w-full border rounded-md p-2"
+                        placeholder="Solución aplicada"></textarea>
+                    <textarea class="observaciones_tecnicas w-full border rounded-md p-2"
+                        placeholder="Observaciones técnicas"></textarea>
+                    <textarea class="comentario_usuario w-full border rounded-md p-2"
+                        placeholder="Descripcion del usuario"></textarea>
+                </form>
+            </div>
+        </div>
+
+        <!-- Botones dentro del modal -->
+        <div class="flex justify-end mt-6 space-x-2">
+            <button class="bg-gray-500 text-white px-4 py-2 rounded-md btn-cancel">
+                Cancelar
+            </button>
+            <button class="bg-green-500 text-white px-4 py-2 rounded-md btn-next">
+                Continuar
+            </button>
+        </div>
+
+        <!-- Cerrar modal -->
+        <button id="btnCerrar" class="absolute top-3 right-3 text-xl">&times;</button>
+    </div>
+</div>
+
+<!-- Modal APROBAR -->
+
+<div id="modal-aprobar" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+
+        <h2 class="text-xl font-semibold text-center mb-2">
+            ¿Deseas aprobar el ticket?
+        </h2>
+        <p class="text-center text-gray-600 mb-4">
+            Ticket #3
+        </p>
+
+        <div class="space-y-3 text-sm text-gray-700">
+            <div>
+                <h4 class="font-semibold">Diagnóstico</h4>
+                <p>Equipo con falla en el sistema.</p>
+            </div>
+
+            <div>
+                <h4 class="font-semibold">Observaciones Técnicas</h4>
+                <p>Se requiere reemplazo de pieza.</p>
+            </div>
+
+            <div>
+                <h4 class="font-semibold">Solución Aplicada</h4>
+                <p>Reparación completada.</p>
+            </div>
+
+            <div>
+                <h4 class="font-semibold">Descripción</h4>
+                <p>Mantenimiento preventivo.</p>
+            </div>
+        </div>
+
+        <p class="text-center text-red-600 mt-4 font-semibold">
+            Esta acción no puede ser revertida
+        </p>
+
+        <!-- Botones -->
+        <div class="flex justify-center gap-4 mt-6">
+            <button id="approveBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                Aprobar
+            </button>
+
+            <button id="closeModalBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                Cancelar
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="{% static 'css/mantenimiento/ticket.css' %}">
+<script src="{% static 'js/mantenimiento/atender.js' %}"></script>
+<script src="{% static 'js/mantenimiento/modal_descripcion.js' %}"></script>
+<script src="{% static 'js/mantenimiento/modal_reporte.js' %}"></script>
+<script src="{% static 'js/mantenimiento/modal_aprobar.js' %}"></script>
+
+{% endblock %}
