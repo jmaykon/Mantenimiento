@@ -14,8 +14,8 @@ urlpatterns = [
     path("lista/en_proceso", views.mante_list_en_proceso, name="mante_list_en_proceso"),
     path("lista/documentando", views.mante_list_documentando, name="mante_list_documentando"),
     path("lista/completado", views.mante_list_completado, name="mante_list_completado"),
-
-
-
-
+    # Aquí añades la ruta para aprobar ticket
+    path('aprobar-ticket/<int:ticket_id>/', views.aprobar_ticket, name='aprobar_ticket'),
+    # urls.py
+    path('ticket-datos/<int:ticket_id>/', views.get_ticket_data, name='ticket-datos'),
 ]

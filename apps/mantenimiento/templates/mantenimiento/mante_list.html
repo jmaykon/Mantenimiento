@@ -6,7 +6,10 @@
     {% for ticket in tickets %}
 
     <!-- ===== INICIO TICKET ===== -->
-    <div class="ticket" id="ticket-{{ ticket.id_ticket }}" data-estado="{{ ticket.estado_ticket }}">
+    <div class="ticket" id="ticket-{{ ticket.id_ticket }}" data-ultimo-paso="{{ ticket.ultimo_paso|default:1 }}"
+        data-diagnostico="{{ ticket.diagnostico|escapejs }}" data-solucion="{{ ticket.solucion_aplicada|escapejs }}"
+        data-observaciones="{{ ticket.observaciones_tecnicas|escapejs }}"
+        data-comentario="{{ ticket.comentario_usuario|escapejs }}">
 
         <!-- Columna Izquierda -->
         <div class="stub">
@@ -71,19 +74,22 @@
                     Completado
                 </button>
                 {% else %}
-                <button class="btn-atender px-0.5 py-0.5 text-white rounded bg-green-500 hover:bg-green-600"
+                <button class="btn-atender px-0.5 py-0.5 text-white bg-green-500 rounded hover:bg-green-600"
                     data-ticket-id="{{ ticket.id_ticket }}">
                     Atender
                 </button>
                 {% endif %}
 
-                <button id="openModalBtn"
-                    class="px-0.5 py-0.5 bg-yellow-600 text-white font-semibold rounded-lg hover:bg-yellow-700 transition">
-                    Aprobar
-                </button>
-
-
                 {% if ticket.estado_ticket == 'completado' %}
+                <button
+                    class="openModalBtn px-0.5 py-0.5 text-white font-semibold rounded-lg transition
+           {% if ticket.aprobado %} bg-gray-400 cursor-not-allowed {% else %} bg-yellow-600 hover:bg-yellow-700 {% endif %}"
+                    data-ticket-id="{{ ticket.id_ticket }}" {% if ticket.aprobado %} disabled {% endif %}>
+                    {% if ticket.aprobado %} Aprobado {% else %} Aprobar {% endif %}
+                </button>
+                {% endif %}
+
+                {% if ticket.aprobado == 'true' %}
                 <button class="px-2 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 btn-ver-reporte"
                     data-ticket-id="{{ ticket.id_ticket }}">
                     Reporte
@@ -93,7 +99,7 @@
 
             <div class="status">
                 Estado:<br>
-                {% if ticket.estado_ticket == 'Pendiente' %}
+                {% if ticket.estado_ticket == 'pendiente' %}
                 <span class="pendiente">Pendiente</span>
                 {% elif ticket.estado_ticket == 'en_proceso' %}
                 <span class="en_proceso">En Proceso</span>
@@ -201,7 +207,6 @@
 </div>
 
 <!-- Modal APROBAR -->
-
 <div id="modal-aprobar" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
     <div class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
 
@@ -209,28 +214,28 @@
             ¿Deseas aprobar el ticket?
         </h2>
         <p class="text-center text-gray-600 mb-4">
-            Ticket #3
+            Ticket #<span id="modal-ticket-id"></span>
         </p>
 
         <div class="space-y-3 text-sm text-gray-700">
             <div>
                 <h4 class="font-semibold">Diagnóstico</h4>
-                <p>Equipo con falla en el sistema.</p>
+                <p id="modal-diagnostico"></p>
             </div>
 
             <div>
                 <h4 class="font-semibold">Observaciones Técnicas</h4>
-                <p>Se requiere reemplazo de pieza.</p>
+                <p id="modal-observaciones"></p>
             </div>
 
             <div>
                 <h4 class="font-semibold">Solución Aplicada</h4>
-                <p>Reparación completada.</p>
+                <p id="modal-solucion"></p>
             </div>
 
             <div>
                 <h4 class="font-semibold">Descripción</h4>
-                <p>Mantenimiento preventivo.</p>
+                <p id="modal-descripcion"></p>
             </div>
         </div>
 
@@ -251,18 +256,12 @@
     </div>
 </div>
 
-
-
-
-
-
-
-
-
 <link rel="stylesheet" href="{% static 'css/mantenimiento/ticket.css' %}">
 <script src="{% static 'js/mantenimiento/atender.js' %}"></script>
 <script src="{% static 'js/mantenimiento/modal_descripcion.js' %}"></script>
 <script src="{% static 'js/mantenimiento/modal_reporte.js' %}"></script>
 <script src="{% static 'js/mantenimiento/modal_aprobar.js' %}"></script>
+<script src="{% static 'js/mantenimiento/atender_ticket.js' %}"></script>
+
 
 {% endblock %}

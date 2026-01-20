@@ -9,6 +9,15 @@ class Ticket(models.Model):
     id_tecnico_asignado = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,related_name='id_ticket_asignado', db_column='id_tecnico_asignado')
     id_equipo = models.ForeignKey(Equipo, on_delete=models.SET_NULL, null=True, blank=True, db_column='id_equipo')
     id_lugar = models.ForeignKey(Lugar, on_delete=models.SET_NULL, null=True, blank=True, db_column='id_lugar')
+    APROBADO_CHOICES = [
+    (0, 'No aprobado'),
+    (1, 'Aprobado'),
+    ]
+    aprobado = models.IntegerField(
+        choices=APROBADO_CHOICES,
+        default=0,
+        db_column='aprobado'
+    )
     TIPO_SOPORTE_CHOICES = [
         ('preventivo', 'Mantenimiento Preventivo'),
         ('correctivo', 'Mantenimiento Correctivo'),
@@ -65,6 +74,7 @@ class Ticket(models.Model):
         ('tecnico', 'Cancelado por Técnico'),
         ('admin', 'Cancelado por Admin'),
     ]
+
     cancelado_por = models.CharField(
         max_length=20,
         choices=CANCELACION_CHOICES,
