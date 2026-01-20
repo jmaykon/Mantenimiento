@@ -20,16 +20,13 @@ def mante_list(request):
 
 
 
-@role_required(roles=["admin", "tecnico","usuario"])
 def mante_detalle(request):
     return render(request, "mantenimiento/mante_detalle.html")
 
-@role_required(roles=["admin","usuario"])
 def mante_cronograma(request):
     return render(request, "mantenimiento/mante_cronograma.html")
 
 @login_required
-@role_required(roles=["admin", "usuario"])
 def mante_solicitar(request):
     if request.method == 'POST':
         tipo = request.POST.get('tipo')
@@ -79,8 +76,7 @@ from django.http import JsonResponse
 from .models import Ticket
 from django.contrib.auth.decorators import login_required
 
-@login_required
-@role_required(roles=["admin", "tecnico", "usuario"])
+
 def atender_ticket(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
@@ -175,57 +171,27 @@ def get_ticket_data(request, ticket_id):
 from django.db.models import Q
 
 @login_required
-@role_required(roles=["admin", "tecnico", "usuario"])
+
 def mante_list_pendientes(request):
-    user = request.user
-    if user.is_superuser or 'usuario' in [role.name for role in user.roles.all()]:
-        # Admin y usuario pueden ver todos los tickets pendientes
-        tickets = Ticket.objects.filter(estado_ticket='pendiente').order_by('-fecha_creacion')
-    else:
-        # Los técnicos solo ven los pendientes asignados a ellos o no asignados
-        tickets = Ticket.objects.filter(
-            estado_ticket='pendiente',
-        ).filter(
-            Q(id_tecnico_asignado__isnull=True) | Q(id_tecnico_asignado=user)
-        ).order_by('-fecha_creacion')
-
+    tickets = Ticket.objects.filter(estado_ticket='pendiente').order_by('-fecha_creacion')
     return render(request, "mantenimiento/mante_list.html", {'tickets': tickets})
 
-@login_required
-@role_required(roles=["admin", "tecnico", "usuario"])
+
+
 def mante_list_en_proceso(request):
-    user = request.user
-    if user.is_superuser or 'usuario' in [role.name for role in user.roles.all()]:
-        # Admin y usuario ven todos los tickets en proceso
-        tickets = Ticket.objects.filter(estado_ticket='en_proceso').order_by('-fecha_creacion')
-    else:
-        # Los técnicos solo ven los tickets asignados a ellos en "en_proceso"
-        tickets = Ticket.objects.filter(
-            estado_ticket='en_proceso',
-            id_tecnico_asignado=user
-        ).order_by('-fecha_creacion')
-
+    tickets = Ticket.objects.filter(estado_ticket='en_proceso').order_by('-fecha_creacion')
     return render(request, "mantenimiento/mante_list.html", {'tickets': tickets})
 
+
 @login_required
-@role_required(roles=["admin", "tecnico", "usuario"])
+
 def mante_list_documentando(request):
-    user = request.user
-    if user.is_superuser or 'usuario' in [role.name for role in user.roles.all()]:
-        # Admin y usuario ven todos los tickets documentando
-        tickets = Ticket.objects.filter(estado_ticket='documentando').order_by('-fecha_creacion')
-    else:
-        # Los técnicos solo ven los tickets asignados a ellos en "documentando"
-        tickets = Ticket.objects.filter(
-            estado_ticket='documentando',
-            id_tecnico_asignado=user
-        ).order_by('-fecha_creacion')
-
+    tickets = Ticket.objects.filter(estado_ticket='documentando').order_by('-fecha_creacion')
     return render(request, "mantenimiento/mante_list.html", {'tickets': tickets})
 
 
+
 @login_required
-@role_required(roles=["admin", "tecnico","usuario"])
 def mante_list_completado(request):
     tickets = Ticket.objects.filter(estado_ticket='completado').order_by('-fecha_creacion')
     return render(request, "mantenimiento/mante_list.html", {'tickets': tickets})

@@ -82,7 +82,7 @@
           </li>
         </ul>
       </li>
-      {% endif %} {% if request.user.role == 'admin' or request.user.role == 'tecnico' %}
+      {% endif %} {% if request.user.role == 'admin' or request.user.role == 'tecnico' or request.user.role == 'usuario' %}
       <li>
         <!-- Botón principal -->
         <button
@@ -108,11 +108,11 @@
         </button>
 
         <!-- Submenú -->
-        {% if request.user.role == 'admin' or request.user.role == 'tecnico' %}
+        {% if request.user.role == 'admin' or request.user.role == 'tecnico' or request.user.role == 'usuario' %}
         <ul class="ml-6 mt-1 space-y-1 hidden agenda-submenu">
           <li
             class="p-2 cursor-pointer rounded hover:bg-gray-700"
-            hx-get=""
+            hx-get="{% url 'mantenimiento:mante_list' %}"
             hx-target="#dynamic-content"
             hx-swap="innerHTML"
           >
@@ -120,7 +120,7 @@
           </li>
           <li
             class="p-2 cursor-pointer rounded hover:bg-gray-700"
-            hx-get='' %}"
+            hx-get="{% url 'mantenimiento:mante_list_pendientes' %}"
             hx-target="#dynamic-content"
             hx-swap="innerHTML"
           >
@@ -129,7 +129,7 @@
 
           <li
             class="p-2 cursor-pointer rounded hover:bg-gray-700"
-            hx-get=""
+            hx-get="{% url 'mantenimiento:mante_list_en_proceso' %}"
             hx-target="#dynamic-content"
             hx-swap="innerHTML"
           >
@@ -138,7 +138,7 @@
 
           <li
             class="p-2 cursor-pointer rounded hover:bg-gray-700"
-            hx-get=""
+            hx-get="{% url 'mantenimiento:mante_list_documentando' %}"
             hx-target="#dynamic-content"
             hx-swap="innerHTML"
           >
@@ -146,7 +146,7 @@
           </li>
           <li
             class="p-2 cursor-pointer rounded hover:bg-gray-700"
-            hx-get=""
+            hx-get="{% url 'mantenimiento:mante_list_completado' %}"
             hx-target="#dynamic-content"
             hx-swap="innerHTML"
           >
@@ -156,7 +156,7 @@
         {% endif %}
       </li>
 
-      {% endif %} {% if request.user.role == 'admin' or request.user.role == 'tecnico' %}
+      {% endif %} {% if request.user.role == 'admin' or request.user.role == 'usuario' or request.user.role == 'tecnico' %}
       <li>
         <a
           hx-get="{% url 'mantenimiento:mante_list' %}"
@@ -168,7 +168,7 @@
           Tickets Solicitados
         </a>
       </li>
-      {% endif %} {% if request.user.role == 'admin' or request.user.role == 'tecnico' %}
+      {% endif %} {% if request.user.role == 'admin' or request.user.role == 'tecnico' or request.user.role == 'usuario' %}
       <li>
         <a
           hx-get="{% url 'mantenimiento:mante_solicitar' %}"

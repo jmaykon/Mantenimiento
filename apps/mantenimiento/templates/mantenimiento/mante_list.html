@@ -73,7 +73,7 @@
                 <button class="btn-atender px-0.5 py-0.5 text-white rounded bg-gray-400 cursor-not-allowed" disabled>
                     Completado
                 </button>
-                {% else %}
+                {% elif request.user.role == 'admin' or request.user.role == 'tecnico' %}
                 <button class="btn-atender px-0.5 py-0.5 text-white bg-green-500 rounded hover:bg-green-600"
                     data-ticket-id="{{ ticket.id_ticket }}">
                     Atender
@@ -180,11 +180,12 @@
             <div class="step-content hidden" data-step="3">
                 <form id="formAtender" class="space-y-4">
                     {% csrf_token %}
-                    <textarea class="diagnostico w-full border rounded-md p-2" placeholder="Diagnóstico"></textarea>
+                    <textarea class="diagnostico w-full border rounded-md p-2"
+                        placeholder="Detalle del Problema"></textarea>
                     <textarea class="solucion_aplicada w-full border rounded-md p-2"
                         placeholder="Solución aplicada"></textarea>
                     <textarea class="observaciones_tecnicas w-full border rounded-md p-2"
-                        placeholder="Observaciones técnicas"></textarea>
+                        placeholder="Observacione Técnica"></textarea>
                     <textarea class="comentario_usuario w-full border rounded-md p-2"
                         placeholder="Descripcion del usuario"></textarea>
                 </form>
@@ -219,7 +220,7 @@
 
         <div class="space-y-3 text-sm text-gray-700">
             <div>
-                <h4 class="font-semibold">Diagnóstico</h4>
+                <h4 class="font-semibold">Detalle del Problema</h4>
                 <p id="modal-diagnostico"></p>
             </div>
 
