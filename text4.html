@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario TI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        .input {
+            @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition shadow-sm;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100 p-6 font-sans">
+
+    <div class="max-w-6xl mx-auto" x-data="pcDashboard()">
+
+        <!-- HEADER -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-extrabold uppercase text-slate-900">Panel de Inventario</h1>
+                <p class="text-slate-500 text-sm mt-1">Control de equipos y periféricos</p>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <button @click="openAddPCModal()"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold shadow-md transition transform hover:-translate-y-0.5">
+                    ➕ Agregar Equipo
+                </button>
+                <button @click="openAddComponentGlobal = true"
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg font-bold shadow-md transition transform hover:-translate-y-0.5">
+                    🖨️ Periférico Libre
+                </button>
+            </div>
+        </div>
+
+        <!-- PERIFÉRICOS SIN ASIGNAR -->
+        <div class="bg-white rounded-2xl border shadow-md mb-6 p-5">
+            <h2 class="font-bold uppercase text-slate-600 mb-3 text-sm">Periféricos sin asignar</h2>
+            <template x-if="componentesGlobales.length === 0">
+                <p class="text-xs text-slate-400 italic">No hay periféricos libres</p>
+            </template>
+            <div class="grid md:grid-cols-2 gap-4">
+                <template x-for="comp in componentesGlobales" :key="comp.id">
+                    <div class="border rounded-xl p-4 bg-slate-50 hover:shadow-lg transition">
+                        <div class="flex justify-between items-center">
+                            <p class="font-semibold text-sm" x-text="comp.tipo"></p>
+                            <span
+                                class="text-xs font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-lg">LIBRE</span>
+                        </div>
+                        <p class="text-xs italic mt-1"><b>AEC:</b> <span x-text="comp.aec"></span></p>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- LISTADO DE PCS -->
+        <template x-for="pc in pcs" :key="pc.id">
+            <div class="bg-white rounded-2xl border shadow-md mb-5 overflow-hidden hover:shadow-lg transition">
+                <!-- HEADER PC -->
+                <div @click="pc.open = !pc.open"
+                    class="bg-slate-900 text-white p-4 flex justify-between items-center cursor-pointer hover:bg-slate-800 transition">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🖥️</span>
+                        <div>
+                            <p class="font-bold text-lg md:text-xl" x-text="pc.tipo + ' - ' + pc.serial"></p>
+                            <p class="text-xs text-indigo-300 mt-0.5" x-text="'IP: ' + pc.ip"></p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold px-3 py-1 rounded-lg" :class="{
+                        'bg-green-600': pc.estado_equipo === 'ACTIVO',
+                        'bg-yellow-500': pc.estado_equipo === 'MANTENIMIENTO',
+                        'bg-red-600': pc.estado_equipo === 'INACTIVO'
+                    }" x-text="pc.estado_equipo"></span>
+                </div>
+
+                <!-- DETALLE PC -->
+                <div x-show="pc.open" x-collapse class="p-4 bg-slate-50">
+
+                    <!-- ESPECIFICACIONES -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs mb-4">
+                        <div>
+                            <p class="uppercase text-slate-400 font-bold">Marca</p>
+                            <p class="italic font-semibold" x-text="pc.marca"></p>
+                        </div>
+                        <div>
+                            <p class="uppercase text-slate-400 font-bold">Modelo</p>
+                            <p class="italic font-semibold" x-text="pc.modelo"></p>
+                        </div>
+                        <div>
+                            <p class="uppercase text-slate-400 font-bold">S.O.</p>
+                            <p class="italic font-semibold" x-text="pc.sistema_operativo"></p>
+                        </div>
+                        <div>
+                            <p class="uppercase text-slate-400 font-bold">Procesador</p>
+                            <p class="italic font-semibold" x-text="pc.procesador"></p>
+                        </div>
+
+                        <!-- RAM dinámicas enumeradas -->
+                        <template x-for="(r,i) in pc.ramData" :key="i">
+                            <div>
+                                <p class="uppercase text-slate-400 font-bold">RAM {{i+1}}</p>
+                                <p class="italic font-semibold" x-text="r.capacidad + ' (' + r.tipo + ')'"></p>
+                            </div>
+                        </template>
+
+                        <!-- Discos múltiples enumerados -->
+                        <template x-for="(d,i) in pc.discos" :key="i">
+                            <div>
+                                <p class="uppercase text-slate-400 font-bold">Disco {{i+1}}</p>
+                                <p class="italic font-semibold"
+                                    x-text="d.tipo + ' - ' + d.capacidad + ' (' + d.estado + ')'"></p>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- COMPONENTES -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <p class="text-xs font-black uppercase text-slate-400">Periféricos Asociados</p>
+                            <button @click="openAddComp(pc)" class="text-xs font-bold text-indigo-600 hover:underline">➕
+                                Agregar Periférico</button>
+                        </div>
+
+                        <template x-for="comp in pc.componentes" :key="comp.id">
+                            <div class="border rounded-lg bg-white p-3">
+                                <div class="flex justify-between items-center">
+                                    <p class="font-bold text-sm" x-text="comp.tipo"></p>
+                                    <span class="text-xs font-bold bg-indigo-100 text-indigo-600 px-2 py-1 rounded"
+                                        x-text="comp.aec"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+            </div>
+        </template>
+
+        <!-- MODAL NUEVO EQUIPO -->
+        <div x-show="openAddPC" x-transition
+            class="fixed inset-0 bg-black/50 flex items-center justify-center overflow-y-auto z-50 px-4">
+            <div class="bg-white p-6 md:p-8 rounded-2xl w-full max-w-4xl shadow-2xl relative"
+                x-data="{ rams: [{tipo:'',capacidad:''}], discos: [{tipo:'',capacidad:'',estado:''}] }">
+
+                <h2 class="font-extrabold text-xl md:text-2xl mb-6 flex items-center gap-2">
+                    ➕ Nuevo Equipo
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm max-h-[70vh] overflow-y-auto">
+
+                    <!-- Campos básicos -->
+                    <input x-model="newPC.tipo" placeholder="Tipo (PC, Laptop, Servidor)" class="input">
+                    <input x-model="newPC.aec" placeholder="AEC" class="input">
+                    <input x-model="newPC.serial" placeholder="Serial" class="input">
+
+                    <input x-model="newPC.marca" placeholder="Marca" class="input">
+                    <input x-model="newPC.modelo" placeholder="Modelo" class="input">
+                    <input x-model="newPC.sistema_operativo" placeholder="Sistema Operativo" class="input">
+
+                    <input x-model="newPC.procesador" placeholder="Procesador" class="input">
+
+                    <!-- RAM dinámica -->
+                    <div class="col-span-1 md:col-span-3 space-y-2">
+                        <template x-for="(r,i) in rams" :key="i">
+                            <div class="flex gap-2 items-center">
+                                <input x-model="r.capacidad" placeholder="RAM" class="input flex-1">
+                                <input x-model="r.tipo" placeholder="Tipo RAM" class="input flex-1">
+                                <button type="button" @click="rams.splice(i,1)"
+                                    class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs transition">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </template>
+                        <button type="button" @click="rams.push({tipo:'',capacidad:''})"
+                            class="text-xs text-indigo-600 hover:underline">➕ Agregar RAM</button>
+                    </div>
+
+                    <!-- Discos dinámicos -->
+                    <div class="col-span-1 md:col-span-3 space-y-2">
+                        <template x-for="(d,i) in discos" :key="i">
+                            <div class="flex gap-2 items-center">
+                                <input x-model="d.tipo" placeholder="Tipo Disco" class="input flex-1">
+                                <input x-model="d.capacidad" placeholder="Capacidad Disco" class="input flex-1">
+                                <input x-model="d.estado" placeholder="Estado Disco" class="input flex-1">
+                                <button type="button" @click="discos.splice(i,1)"
+                                    class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs transition">
+                                    Eliminar
+                                </button>
+                            </div>
+                        </template>
+                        <button type="button" @click="discos.push({tipo:'',capacidad:'',estado:''})"
+                            class="text-xs text-indigo-600 hover:underline">➕ Agregar Disco</button>
+                    </div>
+
+                    <input x-model="newPC.ip" placeholder="IP" class="input">
+                    <select x-model="newPC.estado_equipo" class="input">
+                        <option value="ACTIVO">ACTIVO</option>
+                        <option value="MANTENIMIENTO">MANTENIMIENTO</option>
+                        <option value="INACTIVO">INACTIVO</option>
+                    </select>
+                    <input x-model="newPC.id_lugar" placeholder="Lugar (ID o nombre)" class="input">
+                    <input x-model="newPC.id_users" placeholder="Usuario responsable (ID)" class="input">
+
+                </div>
+
+                <textarea x-model="newPC.observaciones" placeholder="Observaciones"
+                    class="input mt-4 w-full h-24 resize-none"></textarea>
+
+                <div class="flex justify-end gap-3 mt-6">
+                    <button @click="openAddPC=false"
+                        class="px-5 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-lg transition shadow-sm">
+                        Cancelar
+                    </button>
+                    <button type="button"
+                        @click="newPC.ramData = rams; newPC.discos = discos; addPC();"
+                        class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-indigo-700 transition shadow-md">
+                        Guardar Equipo
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function pcDashboard() {
+            return {
+                pcs: [],
+                componentesGlobales: [],
+                openAddPC: false,
+                currentPC: null,
+                newPC: {},
+                openAddPCModal() {
+                    this.newPC = {};
+                    this.openAddPC = true;
+                },
+                addPC() {
+                    const discos = this.newPC.discos && this.newPC.discos.length ? this.newPC.discos : [{ tipo: 'Pendiente', capacidad: 'Pendiente', estado: 'Pendiente' }];
+                    const rams = this.newPC.ramData && this.newPC.ramData.length ? this.newPC.ramData : [{ tipo: 'Pendiente', capacidad: 'Pendiente' }];
+                    
+                    this.pcs.push({
+                        id: Date.now(),
+                        tipo: this.newPC.tipo || 'Pendiente',
+                        aec: this.newPC.aec || 'Pendiente',
+                        serial: this.newPC.serial || 'Pendiente',
+                        marca: this.newPC.marca || 'Pendiente',
+                        modelo: this.newPC.modelo || 'Pendiente',
+                        sistema_operativo: this.newPC.sistema_operativo || 'Pendiente',
+                        procesador: this.newPC.procesador || 'Pendiente',
+                        tipo_ram: rams.map(r => r.tipo).join(', '),
+                        ramData: rams,
+                        discos: discos,
+                        ip: this.newPC.ip || 'Pendiente',
+                        estado_equipo: this.newPC.estado_equipo || 'ACTIVO',
+                        id_lugar: this.newPC.id_lugar || '',
+                        id_users: this.newPC.id_users || '',
+                        observaciones: this.newPC.observaciones || '',
+                        componentes: [],
+                        open: true
+                    });
+
+                    this.openAddPC = false;
+                    this.newPC = {};
+                },
+                openAddComp(pc) {
+                    this.currentPC = pc;
+                },
+                addComponenteGlobal() {
+                    this.componentesGlobales.push({
+                        id: Date.now(),
+                        tipo: this.newComp.tipo,
+                        aec: this.newComp.aec || 'AEC-' + Math.floor(Math.random() * 9000)
+                    });
+                    this.newComp = {};
+                    this.openAddComponentGlobal = false;
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>

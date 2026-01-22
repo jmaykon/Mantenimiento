@@ -1,0 +1,64 @@
+<tr id="componente-{{ comp.id_componente }}" class="bg-white border-b hover:bg-gray-50">
+    <td class="px-4 py-2 text-sm text-gray-700">{{ comp.tipo }}</td>
+    <td class="px-4 py-2 text-sm text-gray-700">{{ comp.aec }}</td>
+    <td class="px-4 py-2 text-sm text-gray-700">
+        {% if comp.marca_ref %}
+            {{ comp.marca_ref.nombre }}
+        {% else %}
+            {{ comp.marca|default:"-" }}
+        {% endif %}
+    </td>
+    <td class="px-4 py-2 text-sm text-gray-700">{{ comp.modelo|default:"-" }}</td>
+    <td class="px-4 py-2 text-sm text-gray-700">{{ comp.serial }}</td>
+    <td class="px-4 py-2 text-sm text-gray-700">
+        {% if comp.id_equipo %}
+            {{ comp.id_equipo.tipo }} - {{ comp.id_equipo.serial }}
+        {% else %}
+            -
+        {% endif %}
+    </td>
+    <td class="px-4 py-2 text-sm text-gray-700">
+        {% if comp.id_users %}
+            {{ comp.id_users.nombre|default:"" }} {{ comp.id_users.apellido_p|default:"" }}
+        {% else %}
+            <span class="text-gray-400">Sin asignar</span>
+        {% endif %}
+    </td>
+    <td class="px-4 py-2 text-sm text-gray-700">
+        {% if comp.id_lugar %}
+            {{ comp.id_lugar.nombre }}
+        {% else %}
+            -
+        {% endif %}
+    </td>
+    <td class="px-4 py-2 text-sm text-gray-700">
+        {% if comp.estado == "ACTIVO" %}
+            <span class="px-3 py-1 rounded-full bg-green-500 text-white font-semibold">{{ comp.estado }}</span>
+        {% elif comp.estado == "MANTENIMIENTO" %}
+            <span class="px-3 py-1 rounded-full bg-yellow-500 text-white font-semibold">{{ comp.estado }}</span>
+        {% else %}
+            <span class="px-3 py-1 rounded-full bg-red-500 text-white font-semibold">{{ comp.estado }}</span>
+        {% endif %}
+    </td>
+    <td class="px-4 py-2 text-sm text-gray-500">{{ comp.observaciones|default:"-" }}</td>
+    <td class="px-4 py-2 text-right">
+        <div class="flex space-x-2">
+            <button 
+                hx-get="{% url 'equipo:editar_componente' comp.id_componente %}" 
+                hx-target="#modal-componente" 
+                hx-swap="innerHTML"
+                class="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded text-xs"
+            >
+                Editar
+            </button>
+            <button 
+                hx-delete="{% url 'equipo:eliminar_componente' comp.id_componente %}" 
+                hx-target="#componente-{{ comp.id_componente }}" 
+                hx-swap="outerHTML"
+                class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs"
+            >
+                Eliminar
+            </button>
+        </div>
+    </td>
+</tr>

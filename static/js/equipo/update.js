@@ -1,6 +1,10 @@
-function openModal(id) {
-    document.getElementById(id).classList.remove('hidden');
-}
-function closeModal(id) {
-    document.getElementById(id).classList.add('hidden');
-}
+document.body.addEventListener('htmx:beforeSwap', function (evt) {
+    if (evt.detail.target && evt.detail.target.id === 'dynamic-content') {
+
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        });
+
+    }
+});

@@ -27,7 +27,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    #pip installs
+    'widget_tweaks',
     # Apps Me
     'apps.users',
     'apps.core',
