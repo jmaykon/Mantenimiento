@@ -1,0 +1,32 @@
+<form hx-post="{% url 'equipo:nuevo_equipo' %}" class="space-y-8">
+    {% csrf_token %}
+    <div>
+        <h3
+            class="text-xs font-black text-indigo-500 uppercase tracking-widest mb-5 flex items-center gap-2">
+            <span class="w-8 h-[2px] bg-indigo-500"></span> 1. Identificación y
+            Red
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="md:col-span-2">
+                <label class="label-premium">Tipo de Hardware</label>
+                {{ form.tipo }} </div>
+            <div>
+                <label class="label-premium">Activo Fijo (AEC)</label>
+                {{ form.aec }}
+            </div>
+            <div>
+                <label class="label-premium">Dirección IP</label>
+                {{ form.ip }}
+            </div>
+        </div>
+    </div>
+
+    <div class="pt-8 border-t border-slate-100 flex justify-end gap-3">
+        <button type="button" onclick="cerrarModalNuevo()"
+            class="px-6 py-2.5 text-slate-500 font-black text-sm hover:bg-slate-100 rounded-xl transition-all">Cancelar</button>
+        <button type="button" onclick="saveData()"
+            class="btn-gradient px-12 py-3 rounded-xl font-black text-sm shadow-indigo-300">
+            Guardar en Inventario
+        </button>
+    </div>
+</form>

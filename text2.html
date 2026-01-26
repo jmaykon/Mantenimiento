@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventario TI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Alpine -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+
+<body class="bg-slate-100 min-h-screen font-sans">
+
+<div class="flex">
+
+    <!-- ============ MENÚ ============ -->
+    <aside class="w-64 bg-slate-900 text-white min-h-screen p-6 space-y-6">
+        <h2 class="text-xl font-black uppercase">Inventario TI</h2>
+
+        <nav class="space-y-2">
+            <button
+                hx-on="click: document.getElementById('contenido').innerHTML = document.getElementById('view-equipos').innerHTML"
+                class="w-full text-left px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 font-bold">
+                🖥️ Equipos
+            </button>
+
+            <button
+                hx-on="click: document.getElementById('contenido').innerHTML = document.getElementById('view-usuarios').innerHTML"
+                class="w-full text-left px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-bold">
+                👤 Usuarios
+            </button>
+        </nav>
+    </aside>
+
+    <!-- ============ CONTENIDO DINÁMICO ============ -->
+    <main class="flex-1 p-6 md:p-10">
+        <div id="contenido">
+            <!-- Se carga Equipos por defecto -->
+        </div>
+    </main>
+
+</div>
+
+<!-- ===================== VISTA EQUIPOS ===================== -->
+<template id="view-equipos">
+    <div class="max-w-5xl mx-auto">
+
+        <div class="mb-8 flex justify-between items-end">
+            <div>
+                <h1 class="text-3xl font-black uppercase">Panel de Inventario</h1>
+                <p class="text-slate-500">Control de Equipos</p>
+            </div>
+        </div>
+
+        <div x-data="pcDashboard()" class="space-y-4">
+
+            <template x-for="pc in pcs" :key="pc.id">
+                <div class="bg-white rounded-xl border shadow">
+
+                    <div @click="pc.open = !pc.open"
+                         class="p-5 bg-slate-900 text-white flex justify-between cursor-pointer">
+                        <div class="flex gap-3 items-center">
+                            <span class="text-xl" x-text="pc.icon"></span>
+                            <div>
+                                <h2 class="font-bold" x-text="pc.name"></h2>
+                                <p class="text-xs" x-text="pc.ip"></p>
+                            </div>
+                        </div>
+                        <span x-text="pc.estadoIP"
+                              class="text-xs font-bold px-2 py-1 rounded bg-green-500"></span>
+                    </div>
+
+                    <div x-show="pc.open" x-collapse class="p-5 bg-slate-50 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                        <template x-for="(value, key) in pc.specs">
+                            <div>
+                                <p class="uppercase text-slate-400 font-bold" x-text="key"></p>
+                                <p x-text="value"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+        </div>
+    </div>
+</template>
+
+<!-- ===================== VISTA USUARIOS ===================== -->
+<template id="view-usuarios">
+    <div class="max-w-4xl mx-auto">
+
+        <h1 class="text-3xl font-black uppercase mb-6">Usuarios</h1>
+
+        <div class="bg-white rounded-xl shadow overflow-hidden">
+
+            <table class="w-full text-sm">
+                <thead class="bg-slate-900 text-white">
+                    <tr>
+                        <th class="text-left p-3">Nombre</th>
+                        <th class="text-left p-3">Rol</th>
+                        <th class="text-left p-3">Equipo Asignado</th>
+                        <th class="text-left p-3">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b">
+                        <td class="p-3 font-bold">Juan Pérez</td>
+                        <td class="p-3">Diseñador</td>
+                        <td class="p-3">PC-AEC 1432</td>
+                        <td class="p-3 text-green-600 font-bold">ACTIVO</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="p-3 font-bold">María López</td>
+                        <td class="p-3">Desarrollo</td>
+                        <td class="p-3">PC-AEC 1440</td>
+                        <td class="p-3 text-green-600 font-bold">ACTIVO</td>
+                    </tr>
+                    <tr>
+                        <td class="p-3 font-bold">Carlos Ruiz</td>
+                        <td class="p-3">Soporte TI</td>
+                        <td class="p-3">Laptop-TI 22</td>
+                        <td class="p-3 text-yellow-600 font-bold">VACACIONES</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</template>
+
+<!-- ===================== ALPINE ===================== -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('contenido').innerHTML =
+        document.getElementById('view-equipos').innerHTML
+})
+
+function pcDashboard() {
+    return {
+        pcs: [
+            {
+                id: 1,
+                icon: '🎨',
+                name: 'PC-AEC 1432',
+                ip: '192.168.1.100',
+                estadoIP: 'ACTIVO',
+                open: false,
+                specs: {
+                    'CPU': 'Ryzen 9',
+                    'RAM': '64GB',
+                    'Disco': '1TB NVMe',
+                    'SO': 'Windows 11'
+                }
+            }
+        ]
+    }
+}
+</script>
+
+</body>
+</html>

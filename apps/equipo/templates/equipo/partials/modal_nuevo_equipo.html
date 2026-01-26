@@ -1,0 +1,10 @@
+<form hx-post="{% url 'equipo:nuevo_equipo' %}" hx-target="#target_equipo">
+    {% csrf_token %}
+    <div class="space-y-4">
+        {{ form.as_p }}
+    </div>
+    <div class="mt-6 flex justify-end gap-2">
+        <button type="button" onclick="cerrarModal()" class="px-4 py-2 border rounded-lg">Cancelar</button>
+        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg">Guardar Equipo</button>
+    </div>
+</form>

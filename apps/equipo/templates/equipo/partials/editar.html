@@ -1,0 +1,174 @@
+{% load static %}
+<div id="modal-editar-equipo" 
+     x-data="{ 
+        open: true,
+        {# Cargamos los datos existentes desde Django hacia Alpine.js #}
+        rams: [
+            {% for ram in equipo.rams.all %}
+                { capacidad: '{{ ram.capacidad|escapejs }}', tipo: '{{ ram.tipo|escapejs }}' }{% if not forloop.last %},{% endif %}
+            {% empty %}
+                { capacidad: '', tipo: '' }
+            {% endfor %}
+        ],
+        discos: [
+            {% for disco in equipo.discos.all %}
+                { capacidad: '{{ disco.capacidad|escapejs }}', tipo: '{{ disco.tipo|escapejs }}' }{% if not forloop.last %},{% endif %}
+            {% empty %}
+                { capacidad: '', tipo: '' }
+            {% endfor %}
+        ]
+     }" 
+     x-show="open"
+     @cerrar-modal-editar.window="open = false"
+     x-transition:enter="transition ease-out duration-300"
+     x-transition:enter-start="opacity-0 scale-95"
+     x-transition:enter-end="opacity-100 scale-100"
+     @equipo-actualizado.window="setTimeout(() => open = false, 150)"
+     class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="open = false"></div>
+
+    <div class="bg-white rounded-[2.5rem] w-full max-w-4xl shadow-2xl relative max-h-[95vh] flex flex-col overflow-hidden border border-white/20">
+        
+        <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
+            <div>
+                <h2 class="text-3xl font-black text-slate-800 tracking-tight">Editar Registro TI</h2>
+                <p class="text-sm text-indigo-500 font-bold uppercase tracking-widest mt-1">AEC: {{ equipo.aec }} • S/N: {{ equipo.serial }}</p>
+            </div>
+            <button @click="open = false" 
+                    class="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-all text-slate-400 font-bold shadow-sm">
+                ✕
+            </button>
+        </div>
+
+        <form hx-post="{% url 'equipo:editar_equipo' equipo.id_equipo %}" 
+              hx-target="#lista-equipos"
+              class="flex-1 overflow-y-auto p-8 space-y-8 bg-white">
+            {% csrf_token %}
+
+            <input type="hidden" name="tipo" value="{{ equipo.tipo }}">
+            <input type="hidden" name="aec" value="{{ equipo.aec }}">
+            <input type="hidden" name="serial" value="{{ equipo.serial }}">
+
+            <section>
+                <h3 class="text-xs font-black text-indigo-500 uppercase tracking-widest mb-5 flex items-center gap-2">
+                    <span class="w-8 h-[2px] bg-indigo-500"></span> 1. Información General y Red
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="label-premium">Dirección IP</label>
+                        <input type="text" name="ip" value="{{ equipo.ip|default:'' }}" class="input-premium" placeholder="192.168.1.XX">
+                    </div>
+                    <div>
+                        <label class="label-premium">Sistema Operativo</label>
+                        <input type="text" name="sistema_operativo" value="{{ equipo.sistema_operativo|default:'' }}" class="input-premium" placeholder="Windows 11 / Linux">
+                    </div>
+                    <div>
+                        <label class="label-premium">Estado del Equipo</label>
+                        <select name="estado_equipo" class="input-premium">
+                            <option value="ACTIVO" {% if equipo.estado_equipo == 'ACTIVO' %}selected{% endif %}>ACTIVO</option>
+                            <option value="MANTENIMIENTO" {% if equipo.estado_equipo == 'MANTENIMIENTO' %}selected{% endif %}>MANTENIMIENTO</option>
+                            <option value="INACTIVO" {% if equipo.estado_equipo == 'INACTIVO' %}selected{% endif %}>DE BAJA</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h3 class="text-xs font-black text-indigo-500 uppercase tracking-widest mb-5 flex items-center gap-2">
+                    <span class="w-8 h-[2px] bg-indigo-500"></span> 2. Especificaciones de Fábrica
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="label-premium">Marca</label>
+                        <input type="text" name="marca" value="{{ equipo.marca|default:'' }}" class="input-premium">
+                    </div>
+                    <div>
+                        <label class="label-premium">Modelo</label>
+                        <input type="text" name="modelo" value="{{ equipo.modelo|default:'' }}" class="input-premium">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="label-premium">Procesador</label>
+                        <input type="text" name="procesador" value="{{ equipo.procesador|default:'' }}" class="input-premium">
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-indigo-50/40 p-6 rounded-[2rem] border border-indigo-100 shadow-inner">
+                    <div class="flex justify-between items-center mb-5">
+                        <label class="label-premium text-indigo-700">Módulos RAM</label>
+                        <button type="button" @click="rams.push({capacidad:'', tipo:''})" class="text-[10px] font-black bg-indigo-600 text-white px-3 py-1.5 rounded-xl shadow-lg hover:bg-indigo-700 transition-all">+ AGREGAR</button>
+                    </div>
+                    <div class="space-y-4">
+                        <template x-for="(r, i) in rams" :key="i">
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border border-indigo-100 transform transition-all hover:scale-[1.02]">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="text" name="ram_capacidad[]" x-model="r.capacidad" placeholder="Ej: 16GB" class="input-premium py-1.5 text-xs">
+                                    <input type="text" name="ram_tipo[]" x-model="r.tipo" placeholder="Ej: DDR4" class="input-premium py-1.5 text-xs">
+                                </div>
+                                <button type="button" @click="rams.splice(i, 1)" class="w-full mt-2 text-rose-500 text-[10px] font-black uppercase hover:bg-rose-50 rounded-lg transition-all py-1 border border-dashed border-rose-200">Eliminar Módulo</button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="bg-emerald-50/40 p-6 rounded-[2rem] border border-emerald-100 shadow-inner">
+                    <div class="flex justify-between items-center mb-5">
+                        <label class="label-premium text-emerald-700">Almacenamiento</label>
+                        <button type="button" @click="discos.push({capacidad:'', tipo:''})" class="text-[10px] font-black bg-emerald-600 text-white px-3 py-1.5 rounded-xl shadow-lg hover:bg-emerald-700 transition-all">+ AGREGAR</button>
+                    </div>
+                    <div class="space-y-4">
+                        <template x-for="(d, i) in discos" :key="i">
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border border-emerald-100 transform transition-all hover:scale-[1.02]">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="text" name="disco_capacidad[]" x-model="d.capacidad" placeholder="Ej: 512GB" class="input-premium py-1.5 text-xs">
+                                    <input type="text" name="disco_tipo[]" x-model="d.tipo" placeholder="Ej: SSD NVMe" class="input-premium py-1.5 text-xs">
+                                </div>
+                                <button type="button" @click="discos.splice(i, 1)" class="w-full mt-2 text-rose-500 text-[10px] font-black uppercase hover:bg-rose-50 rounded-lg transition-all py-1 border border-dashed border-rose-200">Eliminar Disco</button>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="label-premium">Ubicación</label>
+                    <select name="id_lugar" class="input-premium"> 
+                        {% for lugar in lugares %}
+                        <option value="{{ lugar.id_lugar }}" {% if equipo.id_lugar_id == lugar.id_lugar %}selected{% endif %}>
+                            {{ lugar.nombre_lugar }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="label-premium">Usuario Responsable</label>
+                    <select name="id_users" class="input-premium"> 
+                        <option value="">Sin asignar</option>
+                        {% for usuario in usuarios %}
+                        <option value="{{ usuario.id }}" {% if equipo.id_users_id == usuario.id %}selected{% endif %}>
+                            {{ usuario.username }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="pt-8 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50 -mx-8 -mb-8 p-8 mt-8">
+                <button type="button" 
+                        @click="open = false"
+                        class="px-6 py-2.5 text-slate-500 font-black text-sm hover:bg-slate-200 rounded-xl transition-all">
+                    Cancelar
+                </button>
+                <button type="submit" 
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-12 py-3 rounded-xl font-black text-sm shadow-xl shadow-indigo-200 transition-all active:scale-95">
+                    Actualizar Información
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{% static 'js/equipo/editar.js' %}"></script>

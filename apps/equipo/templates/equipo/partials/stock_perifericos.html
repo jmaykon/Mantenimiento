@@ -1,0 +1,21 @@
+<section>
+    <div class="flex items-center justify-between mb-4 px-2">
+        <h2 class="text-xs font-black uppercase tracking-[0.2em] text-indigo-400">Componentes en Stock</h2>
+        <span class="px-3 py-1 bg-emerald-500 text-white rounded-full text-[10px] font-black shadow-lg">
+            {{ count }} Disponibles
+        </span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {% for p in perifericos %}
+        <div class="p-4 border rounded-2xl bg-slate-50">
+            <p class="font-bold">{{ p.tipo }}</p>
+            <p class="text-sm text-slate-500">{{ p.marca }} - {{ p.serial }}</p>
+        </div>
+        {% empty %}
+        <div class="col-span-full py-10 border-4 border-dashed border-slate-200 rounded-[2rem] text-center text-slate-400">
+            No hay periféricos libres
+        </div>
+        {% endfor %}
+    </div>
+</section>

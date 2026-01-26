@@ -1,0 +1,36 @@
+/* --- CONFIGURACIÓN DE COLORES DE INPUTS --- */
+
+/* 1. Fondo de los inputs (Color hueso/gris suave) */
+.input-premium, 
+.input-premium-mini, 
+.input-premium-stock {
+    background-color: #f1f5f9 !important; /* Slate-100 */
+    border: 1px solid #e2e8f0 !important; /* Slate-200 */
+    @apply w-full px-4 py-2.5 rounded-xl outline-none text-sm text-slate-700 transition-all;
+}
+
+/* 2. Color del Placeholder (Gris oscuro para que resalte) */
+input::placeholder, 
+textarea::placeholder,
+.input-premium-stock::placeholder {
+    color: #475569 !important; /* Slate-600 */
+    font-weight: 600 !important;
+    opacity: 1 !important;
+}
+
+/* 3. Efecto al hacer clic (Focus) */
+.input-premium:focus, 
+.input-premium-mini:focus, 
+.input-premium-stock:focus {
+    background-color: #ffffff !important; /* Cambia a blanco al escribir */
+    border-color: #6366f1 !important; /* Borde Índigo */
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1) !important;
+}
+
+/* Estilos de etiquetas y contenedores */
+.label-premium {
+    @apply text-[11px] font-bold text-indigo-600 uppercase tracking-widest mb-1.5 ml-1 block;
+}
+
+.bg-indigo-custom { background-color: rgba(238, 242, 255, 0.5); }
+.bg-emerald-custom { background-color: rgba(236, 253, 245, 0.5); }
