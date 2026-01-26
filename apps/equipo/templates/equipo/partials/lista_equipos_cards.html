@@ -1,0 +1,270 @@
+{% load static %}
+
+{% for equipo in equipos %}
+<div class="card-equipo bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden transition-all hover:shadow-xl hover:border-indigo-100 group/card mb-6"
+     data-open="true">
+    
+    <!-- Header clickeable -->
+    <div class="p-5 flex flex-wrap justify-between items-center gap-4 border-b border-slate-50 cursor-pointer hover:bg-slate-50/50"
+         data-toggle>
+        
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shadow-lg text-white transform group-hover/card:scale-105 transition-transform {% if equipo.tipo == 'Laptop' %}bg-gradient-to-br from-amber-400 to-orange-500 shadow-orange-100{% else %}bg-gradient-to-br from-indigo-500 to-violet-600 shadow-indigo-100{% endif %}">
+                <span>{% if equipo.tipo == 'Laptop' %}💻{% else %}🖥️{% endif %}</span>
+            </div>
+
+            <div>
+                <div class="flex items-center gap-2">
+                    <h3 class="font-black text-slate-800 text-lg leading-tight">
+                        {{ equipo.id_equipo}} {{ equipo.id_users.usuario_sistema|title }}
+                    </h3>
+                    <span class="status-badge {% if equipo.estado_equipo == 'ACTIVO' %}bg-emerald-50 text-emerald-600 border-emerald-200{% elif equipo.estado_equipo == 'MANTENIMIENTO' %}bg-amber-50 text-amber-600 border-amber-200{% else %}bg-rose-50 text-rose-600 border-rose-200{% endif %}">
+                        {{ equipo.get_estado_equipo_display }}
+                    </span>
+                </div>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">
+                    Serial: {{ equipo.serial }} • AEC: {{ equipo.aec }}
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4 bg-indigo-50/50 px-5 py-3 rounded-2xl border border-white">
+            <div class="text-right">
+                <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Dirección IP</p>
+                <p class="text-sm font-mono font-black text-indigo-600">{{ equipo.ip|default:"0.0.0.0" }}</p>
+            </div>
+            <div class="h-8 w-px bg-indigo-200"></div>
+            
+            <div class="flex gap-2" @click.stop>
+                <button hx-get="{% url 'equipo:editar_equipo' equipo.id_equipo %}"
+                        hx-target="#modales-container"
+                        class="p-2.5 bg-white hover:bg-indigo-600 hover:text-white rounded-xl transition-all text-indigo-400 shadow-sm border border-indigo-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                    </svg>
+                </button>
+
+                <button hx-post="{% url 'equipo:eliminar_equipo' equipo.id_equipo %}"
+                        hx-target="closest .card-equipo"
+                        hx-swap="outerHTML"
+                        hx-trigger="confirmar-eliminacion"
+                        data-equipo="Id :{{ equipo.id_equipo}}"
+                        data-usuario="{{ equipo.id_users.usuario_sistema }}"
+                        onclick="confirmarBorrado(this)"
+                        class="p-2.5 bg-white hover:bg-rose-600 hover:text-white rounded-xl transition-all text-rose-400 shadow-sm border border-rose-100">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido desplegable -->
+    <div class="card-body bg-gradient-to-b from-slate-50 to-white">
+        <div class="p-8">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                <!-- Especificaciones -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <span class="w-5 h-[2px] bg-indigo-100"></span> Especificaciones
+                    </h4>
+                    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="flex justify-between py-2.5 border-b border-slate-50">
+                            <span class="text-xs font-bold text-slate-400">Procesador</span>
+                            <span class="text-xs font-black text-slate-700">{{ equipo.procesador|default:"N/A" }}</span>
+                        </div>
+                        <div class="flex justify-between py-2.5 border-b border-slate-50">
+                            <span class="text-xs font-bold text-slate-400">Sistema</span>
+                            <span class="text-xs font-black text-indigo-600">{{ equipo.sistema_operativo|default:"N/A" }}</span>
+                        </div>
+                        <div class="flex justify-between py-2.5">
+                            <span class="text-xs font-bold text-slate-400">Ubicación</span>
+                            <span class="text-xs font-black text-emerald-500">{{ equipo.id_lugar.nombre|default:"Sin asignar" }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Memoria RAM -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <span class="w-5 h-[2px] bg-indigo-100"></span> Memoria RAM
+                    </h4>
+                    <div class="flex flex-wrap gap-3">
+                        {% for ram in equipo.rams.all %}
+                        <div class="bg-gradient-to-br from-indigo-600 to-violet-700 text-white p-4 rounded-2xl shadow-lg shadow-indigo-100 flex-1 min-w-[130px] border-b-4 border-indigo-900/20">
+                            <p class="text-2xl font-black">{{ ram.capacidad }}</p>
+                            <p class="text-[10px] opacity-80 font-black uppercase tracking-tighter">{{ ram.tipo }} • {{ ram.frecuencia }}MHz</p>
+                        </div>
+                        {% empty %}
+                        <p class="text-xs text-slate-400 italic">No hay módulos RAM</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Almacenamiento -->
+                <div class="space-y-4">
+                    <h4 class="text-[10px] font-black text-indigo-300 uppercase tracking-[0.2em] flex items-center gap-2">
+                        <span class="w-5 h-[2px] bg-indigo-100"></span> Almacenamiento
+                    </h4>
+                    <div class="space-y-3">
+                        {% for disco in equipo.discos.all %}
+                        <div class="bg-white p-4 rounded-2xl border border-slate-100 flex items-center gap-4 shadow-sm hover:border-emerald-200 transition-colors">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-xl border border-emerald-100">💾</div>
+                            <div class="flex-1">
+                                <p class="text-xs font-black text-slate-700 uppercase">{{ disco.tipo }} {{ disco.capacidad }}</p>
+                                <p class="text-[9px] font-bold text-emerald-500 uppercase tracking-tighter">{{ disco.estado|default:"OPERATIVO" }}</p>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-xs text-slate-400 italic">No hay discos</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Periféricos -->
+            <div class="mt-8 pt-8 border-t border-slate-200/60">
+                <h4 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-5">Periféricos Vinculados</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {% for componente in equipo.componentes.all %}
+                    <div class="bg-white border border-slate-200 p-4 rounded-2xl flex justify-between items-center group shadow-sm hover:shadow-md transition-all">
+                        <div class="flex items-center gap-3">
+                            <span class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg border border-indigo-100">🔌</span>
+                            <div>
+                                <p class="text-xs font-black text-slate-800">{{ componente.tipo }}</p>
+                                <p class="text-[10px] text-indigo-400 font-bold">{{ componente.marca }} • {{ componente.serial }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-xs text-slate-400 italic">Sin periféricos asociados.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="py-20 border-4 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center text-slate-400 bg-white/40">
+    <p class="text-sm font-bold tracking-widest uppercase opacity-60">No hay equipos registrados</p>
+</div>
+{% endfor %}
+
+<!-- Estilos de animación -->
+<style>
+.card-body {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, opacity 0.4s ease, padding 0.4s ease;
+    padding: 0 2rem;
+}
+.card-equipo[data-open="true"] .card-body {
+    max-height: 5000px; /* suficientemente grande para todo el contenido */
+    opacity: 1;
+    padding: 2rem;
+}
+</style>
+
+<!-- JS desplegable -->
+<script>
+function confirmarBorrado(button) {
+    // Extraemos los datos del equipo desde los atributos data
+    const nombreEquipo = button.getAttribute('data-equipo');
+    const usuarioResponsable = button.getAttribute('data-usuario');
+
+    Swal.fire({
+        title: '¿Eliminar equipo?',
+        html: `Estás por borrar el equipo <b>${nombreEquipo}</b>.<br><small class="text-slate-500">Responsable: ${usuarioResponsable}</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#f43f5e',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true,
+        customClass: {
+            popup: 'rounded-[2rem] border-slate-100',
+            confirmButton: 'rounded-xl font-bold px-6 py-3',
+            cancelButton: 'rounded-xl font-bold px-6 py-3'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Disparamos la acción de HTMX
+            htmx.trigger(button, "confirmar-eliminacion");
+            
+            // Esperamos la respuesta del servidor para confirmar el éxito
+            button.addEventListener('htmx:afterOnLoad', function(evt) {
+                if (evt.detail.xhr.status >= 200 && evt.detail.xhr.status < 300) {
+                    Swal.fire({
+                        title: '¡Equipo Eliminado!',
+                        html: `Se ha borrado con éxito:<br><span class="text-indigo-600 font-bold">${nombreEquipo}</span><br><span class="text-xs text-slate-400">Anteriormente asignado a: ${usuarioResponsable}</span>`,
+                        icon: 'success',
+                        timer: 3000,
+                        showConfirmButton: false,
+                        customClass: {
+                            popup: 'rounded-[2rem]'
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'No pudimos procesar la eliminación.',
+                        icon: 'error'
+                    });
+                }
+            }, { once: true });
+        }
+    });
+}
+
+
+
+
+//**EDITAR
+// Inicializar el modal con animación
+    (function() {
+        const modal = document.getElementById('modal-editar-equipo');
+        const content = modal.querySelector('div.bg-white');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            content.classList.remove('scale-95');
+        }, 10);
+
+        // Cargar datos existentes
+        const initialData = {
+            rams: [{% for ram in equipo.rams.all %}{cap: '{{ram.capacidad}}', tipo: '{{ram.tipo}}'}{% if not forloop.last %},{% endif %}{% endfor %}],
+            discos: [{% for d in equipo.discos.all %}{cap: '{{d.capacidad}}', tipo: '{{d.tipo}}'}{% if not forloop.last %},{% endif %}{% endfor %}]
+        };
+
+        initialData.rams.forEach(r => agregarFila('ram', r.cap, r.tipo));
+        initialData.discos.forEach(d => agregarFila('disco', d.cap, d.tipo));
+    })();
+
+    function agregarFila(tipo, cap = '', mod = '') {
+        const container = document.getElementById(`lista-${tipo}`);
+        const div = document.createElement('div');
+        div.className = "flex gap-2 bg-white p-2 rounded-xl shadow-sm border border-white";
+        div.innerHTML = `
+            <input type="text" name="${tipo}_capacidad[]" value="${cap}" placeholder="Capacidad" class="w-1/2 text-xs p-2 border-b">
+            <input type="text" name="${tipo}_tipo[]" value="${mod}" placeholder="Tipo" class="w-1/2 text-xs p-2 border-b">
+            <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 px-2">✕</button>
+        `;
+        container.appendChild(div);
+    }
+
+    function cerrarModalEditar() {
+        const modal = document.getElementById('modal-editar-equipo');
+        modal.classList.add('opacity-0');
+        setTimeout(() => modal.remove(), 300);
+    }
+
+    // Cerrar si HTMX termina con éxito
+    document.body.addEventListener('htmx:afterOnLoad', (e) => {
+        if (e.detail.target.id === 'lista-equipos') {
+            cerrarModalEditar();
+            Swal.fire({ title: '¡Actualizado!', icon: 'success', timer: 1500, showConfirmButton: false, customClass: { popup: 'rounded-[2rem]' } });
+        }
+    });
+</script>

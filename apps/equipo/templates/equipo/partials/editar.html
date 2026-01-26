@@ -1,0 +1,219 @@
+{% load static %}
+<div id="modal-editar-equipo" class="fixed inset-0 z-[99] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/70 backdrop-blur-md" onclick="document.getElementById('modal-editar-equipo')?.remove()"></div>
+
+    <div class="relative bg-white rounded-[2.5rem] w-full max-w-4xl shadow-2xl flex flex-col border border-white/20 transform transition-all max-h-[95vh] overflow-hidden animate-in fade-in zoom-in duration-200">
+
+        <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white sticky top-0 z-10">
+            <div>
+                <h2 class="text-3xl font-black text-slate-800 tracking-tight">Editar Activo TI</h2>
+                <p class="text-sm text-indigo-500 font-bold uppercase tracking-widest mt-1">Configuración de Hardware y Asignación</p>
+            </div>
+            <button type="button" onclick="document.getElementById('modal-editar-equipo')?.remove()"
+                class="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-all text-slate-400 font-bold shadow-sm">✕</button>
+        </div>
+
+        <form id="form-editar-equipo" 
+              hx-post="{% url 'equipo:editar_equipo' equipo.id_equipo %}"
+              hx-target="#lista-equipos" 
+              class="p-8 overflow-y-auto space-y-8 flex-1 bg-white custom-scrollbar">
+            {% csrf_token %}
+
+            <div>
+                <h3 class="text-xs font-black text-indigo-500 uppercase tracking-widest mb-5 flex items-center gap-2">
+                    <span class="w-8 h-[2px] bg-indigo-500"></span> 1. Identificación y Sistema
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="label-premium block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">Tipo de Hardware</label>
+                        <input type="text" name="tipo" value="{{ equipo.tipo|default:'' }}" class="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="label-premium block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">Activo Fijo (AEC)</label>
+                        <input type="text" name="aec" value="{{ equipo.aec|default:'' }}" class="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="label-premium block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">Sistema Operativo</label>
+                        <input type="text" name="sistema_operativo" value="{{ equipo.sistema_operativo|default:'' }}" class="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="label-premium block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">Dirección IP</label>
+                        <input type="text" name="ip" value="{{ equipo.ip|default:'' }}" class="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 transition-all">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xs font-black text-indigo-500 uppercase tracking-widest mb-5 flex items-center gap-2">
+                    <span class="w-8 h-[2px] bg-indigo-500"></span> 2. Especificaciones de Fábrica
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="label-premium block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">Marca</label>
+                        <input type="text" name="marca" value="{{ equipo.marca|default:'' }}" class="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-sm font-bold text-slate-700">
+                    </div>
+                    <div>
+                        <label class="label-premium block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">Modelo</label>
+                        <input type="text" name="modelo" value="{{ equipo.modelo|default:'' }}" class="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-sm font-bold text-slate-700">
+                    </div>
+                    <div>
+                        <label class="label-premium block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">Procesador</label>
+                        <input type="text" name="procesador" value="{{ equipo.procesador|default:'' }}" class="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-sm font-bold text-slate-700">
+                    </div>
+                    <div>
+                        <label class="label-premium block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">Serial</label>
+                        <input type="text" name="serial" value="{{ equipo.serial|default:'' }}" class="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-sm font-bold text-slate-700">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xs font-black text-indigo-500 uppercase tracking-widest mb-5 flex items-center gap-2">
+                    <span class="w-8 h-[2px] bg-indigo-500"></span> 3. Estado y Ubicación
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="label-premium block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">Estado</label>
+                        <select name="estado_equipo" class="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-sm font-bold text-slate-700">
+                            <option value="ACTIVO" {% if equipo.estado_equipo == 'ACTIVO' %}selected{% endif %}>✅ Activo</option>
+                            <option value="MANTENIMIENTO" {% if equipo.estado_equipo == 'MANTENIMIENTO' %}selected{% endif %}>🛠️ Mantenimiento</option>
+                            <option value="INACTIVO" {% if equipo.estado_equipo == 'INACTIVO' %}selected{% endif %}>❌ Inactivo</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label-premium block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">Ubicación</label>
+                        <select name="id_lugar" class="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-sm font-bold text-slate-700">
+                            {% for lugar in lugares %}
+                            <option value="{{ lugar.id_lugar }}" {% if equipo.id_lugar_id == lugar.id_lugar %}selected{% endif %}>{{ lugar.nombre_lugar }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label-premium block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">Usuario</label>
+                        <select name="id_users" class="w-full px-4 py-2.5 bg-slate-50 border-none rounded-xl outline-none text-sm font-bold text-slate-700">
+                            <option value="">Seleccione usuario...</option>
+                            {% for usuario in usuarios %}
+                            <option value="{{ usuario.id }}" {% if equipo.id_users_id == usuario.id %}selected{% endif %}>
+                                {{ usuario.first_name }} {{ usuario.last_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-indigo-50/40 p-6 rounded-[2rem] border border-indigo-100">
+                    <div class="flex justify-between items-center mb-5">
+                        <label class="text-[11px] font-black text-indigo-700 uppercase tracking-widest">Módulos RAM</label>
+                        <button type="button" onclick="SafeAddRow('ram')" class="text-[10px] font-black bg-indigo-600 text-white px-3 py-1.5 rounded-xl shadow-lg hover:bg-indigo-700 transition-all">+ AGREGAR</button>
+                    </div>
+                    <div id="ram-container-edit" class="space-y-4"></div>
+                </div>
+
+                <div class="bg-emerald-50/40 p-6 rounded-[2rem] border border-emerald-100">
+                    <div class="flex justify-between items-center mb-5">
+                        <label class="text-[11px] font-black text-emerald-700 uppercase tracking-widest">Almacenamiento</label>
+                        <button type="button" onclick="SafeAddRow('disco')" class="text-[10px] font-black bg-emerald-600 text-white px-3 py-1.5 rounded-xl shadow-lg hover:bg-emerald-700 transition-all">+ AGREGAR</button>
+                    </div>
+                    <div id="disco-container-edit" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <div class="col-span-full">
+                <label class="label-premium block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1">Observaciones</label>
+                <textarea name="observaciones_equipo" rows="3" class="w-full px-4 py-4 bg-slate-50 border-none rounded-xl outline-none text-sm font-bold text-slate-700 resize-none h-24 focus:ring-2 focus:ring-indigo-500">{{ equipo.observaciones_equipo|default:'' }}</textarea>
+            </div>
+
+            <div class="p-8 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50 -mx-8 -mb-8 mt-8 sticky bottom-0">
+                <button type="button" onclick="document.getElementById('modal-editar-equipo')?.remove()" 
+                    class="px-6 py-2.5 text-slate-500 font-black text-sm hover:bg-slate-100 rounded-xl transition-all">Cancelar</button>
+                <button type="button" onclick="ConfirmarActualizacion()"
+                    class="px-12 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-black text-sm shadow-xl shadow-indigo-200 hover:scale-[1.02] active:scale-95 transition-all">
+                    Actualizar en Inventario
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Función para agregar filas dinámicas con blindaje anti-null
+        function SafeAddRow(tipo, cap = '', det = '', freq = '') {
+            const container = document.getElementById(tipo + '-container-edit');
+            if (!container) return; // Si no existe el contenedor, no hace nada (evita el error)
+
+            const div = document.createElement('div');
+            div.className = "flex gap-2 bg-white p-2 rounded-xl shadow-sm border border-slate-100 animate-in slide-in-from-top-1";
+            
+            if (tipo === 'ram') {
+                div.innerHTML = `
+                    <input type="text" name="ram_capacidad[]" value="${cap}" placeholder="Cap" class="w-1/4 text-[11px] font-bold p-2 bg-slate-50 rounded-lg border-none">
+                    <input type="text" name="ram_tipo[]" value="${det}" placeholder="Tipo" class="w-1/4 text-[11px] font-bold p-2 bg-slate-50 rounded-lg border-none">
+                    <input type="text" name="ram_frecuencia[]" value="${freq}" placeholder="MHz" class="w-1/4 text-[11px] font-bold p-2 bg-slate-50 rounded-lg border-none">
+                    <button type="button" onclick="this.parentElement.remove()" class="text-rose-400 px-2 font-bold hover:text-rose-600">✕</button>
+                `;
+            } else {
+                div.innerHTML = `
+                    <input type="text" name="disco_capacidad[]" value="${cap}" placeholder="Cap" class="w-1/3 text-[11px] font-bold p-2 bg-slate-50 rounded-lg border-none">
+                    <input type="text" name="disco_tipo[]" value="${det}" placeholder="Tipo" class="w-2/3 text-[11px] font-bold p-2 bg-slate-50 rounded-lg border-none">
+                    <button type="button" onclick="this.parentElement.remove()" class="text-rose-400 px-2 font-bold hover:text-rose-600">✕</button>
+                `;
+            }
+            container.appendChild(div);
+        }
+
+        function ConfirmarActualizacion() {
+            Swal.fire({
+                title: '¿Guardar cambios?',
+                text: "Se actualizará la ficha técnica del activo.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#f43f5e',
+                confirmButtonText: 'Sí, actualizar',
+                cancelButtonText: 'Cancelar',
+                customClass: { popup: 'rounded-[2rem]' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    htmx.trigger("#form-editar-equipo", "submit");
+                }
+            });
+        }
+
+        // BLOQUE DE INICIALIZACIÓN SEGURA
+        (function() {
+            // Función para precargar datos de Django
+            function loadData() {
+                const ramContainer = document.getElementById('ram-container-edit');
+                if (ramContainer) {
+                    {% for ram in equipo.rams.all %}
+                        SafeAddRow('ram', '{{ ram.capacidad }}', '{{ ram.tipo }}', '{{ ram.frecuencia|default:"" }}');
+                    {% endfor %}
+                    {% for disco in equipo.discos.all %}
+                        SafeAddRow('disco', '{{ disco.capacidad }}', '{{ disco.tipo }}');
+                    {% endfor %}
+                } else {
+                    // Si el DOM aún no está listo, reintenta en 50ms
+                    setTimeout(loadData, 50);
+                }
+            }
+            
+            loadData();
+
+            // Listener de éxito HTMX
+            document.body.addEventListener('htmx:afterOnLoad', function(evt) {
+                if (evt.detail.elt.id === 'form-editar-equipo') {
+                    document.getElementById('modal-editar-equipo')?.remove();
+                    Swal.fire({
+                        title: '¡Sincronizado!',
+                        text: 'Activo actualizado con éxito.',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false,
+                        customClass: { popup: 'rounded-[2.5rem]' }
+                    });
+                }
+            });
+        })();
+    </script>
+</div>

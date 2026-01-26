@@ -1,0 +1,354 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/equipo/add_equipo.css' %}">
+{% csrf_token %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8" id="target_equipo">
+    <header
+        class="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6 bg-white/60 p-6 rounded-[2rem] border border-white backdrop-blur-md shadow-sm">
+        <div>
+            <div class="flex items-center gap-3 mb-2">
+                <div class="p-2 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-xl shadow-lg animate-pulse">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z">
+                        </path>
+                    </svg>
+                </div>
+                <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">
+                    Inventario de <span
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Equipos</span>
+                </h1>
+            </div>
+            <p class="text-slate-500 font-medium italic">Gestión de
+                activos tecnológicos.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button onclick="openModalSubirExcel()"
+                class="flex items-center gap-2 px-4 py-2.5 bg-white border border-indigo-100 rounded-xl font-bold text-indigo-600 hover:bg-indigo-50 transition shadow-sm">
+                <span class="text-lg">📂</span> Subir Excel
+            </button>
+            <button onclick="abrirModalStock()"
+                class="flex items-center gap-2 px-5 py-2.5 bg-white border border-indigo-100 rounded-2xl font-bold text-indigo-600 hover:bg-indigo-50 transition-all shadow-sm active:scale-95">
+                <span class="text-lg">📦</span> Stock Periféricos
+            </button>
+
+            <button onclick="openModal()"
+                class="flex items-center gap-2 px-4 py-2.5 bg-white border border-indigo-100 rounded-xl font-bold text-indigo-600 hover:bg-indigo-50 transition shadow-sm">
+                <span class="text-lg">➕</span> Nuevo Equipo
+            </button>
+        </div>
+    </header>
+</div>
+{% if mensajes_importacion %}
+<div
+    class="bg-slate-800 text-white p-6 rounded-[2rem] mb-10 max-h-60 overflow-y-auto text-sm font-mono shadow-2xl border border-slate-700">
+    <div class="flex items-center gap-2 mb-4">
+        <span class="flex h-3 w-3 rounded-full bg-indigo-500 animate-pulse"></span>
+        <h4 class="text-indigo-400 font-black uppercase tracking-widest">Resultado de Importación</h4>
+    </div>
+    <div class="space-y-1">
+        {% for msg in mensajes_importacion %}
+        <p class="border-b border-slate-700/50 py-1">
+            {{ msg|safe }}
+        </p>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+<div id="lista-equipos" hx-get="{% url 'equipo:lista_equipos' %}" hx-trigger="update-list from:body">
+    {% include 'equipo/partials/lista_equipos_cards.html' %}
+</div>
+<div id="modales-container"></div>
+
+<div id="modalNuevoEquipo"
+    class="hidden fixed inset-0 z-[90] w-screen h-screen bg-slate-900/70 backdrop-blur-md overflow-y-auto flex items-center justify-center p-4">
+
+    <div class="fixed inset-0 w-full h-full cursor-default" onclick="closeModal()"></div>
+
+    <div
+        class="relative bg-white rounded-[2.5rem] w-full max-w-4xl shadow-2xl flex flex-col border border-white/20 my-auto transform transition-all max-h-[95vh] overflow-hidden">
+
+        <div
+            class="p-8 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white sticky top-0 z-10">
+            <div>
+                <h2 id="modalTitle" class="text-3xl font-black text-slate-800 tracking-tight">Nuevo
+                    Activo TI</h2>
+                <p class="text-sm text-indigo-500 font-bold uppercase tracking-widest mt-1">Configuración
+                    de Hardware y Asignación</p>
+            </div>
+            <button onclick="closeModal()"
+                class="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-all text-slate-400 font-bold shadow-sm">✕</button>
+        </div>
+
+        <div class="p-8 overflow-y-auto space-y-8 flex-1 bg-white custom-scrollbar">
+            <div>
+                <h3 class="text-xs font-black text-indigo-500 uppercase tracking-widest mb-5 flex items-center gap-2">
+                    <span class="w-8 h-[2px] bg-indigo-500"></span> 1.
+                    Identificación y Sistema
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="label-premium">Tipo de Hardware</label>
+                        <input id="pcTipo" class="input-premium w-full px-4 py-2.5 rounded-xl outline-none text-sm"
+                            placeholder="Ej: CPU/LAPTOP">
+                    </div>
+                    <div>
+                        <label class="label-premium">Activo Fijo (AEC)</label>
+                        <input id="pcAec" class="input-premium w-full px-4 py-2.5 rounded-xl outline-none text-sm"
+                            placeholder="Ej: 10250">
+                    </div>
+                    <div>
+                        <label class="label-premium">Sistema Operativo</label>
+                        <input id="pcSO" class="input-premium w-full px-4 py-2.5 rounded-xl outline-none text-sm"
+                            placeholder="Ej: Windows 11 Pro">
+                    </div>
+                    <div>
+                        <label class="label-premium">Dirección IP</label>
+                        <input id="pcIp" class="input-premium w-full px-4 py-2.5 rounded-xl outline-none text-sm"
+                            placeholder="10.0.0.X">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xs font-black text-indigo-500 uppercase tracking-widest mb-5 flex items-center gap-2">
+                    <span class="w-8 h-[2px] bg-indigo-500"></span> 2.
+                    Especificaciones de Fábrica
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="label-premium">Marca</label>
+                        <input id="pcMarca" class="input-premium w-full px-4 py-2.5 rounded-xl outline-none text-sm"
+                            placeholder="Ej: Dell">
+                    </div>
+                    <div>
+                        <label class="label-premium">Modelo</label>
+                        <input id="pcModelo" class="input-premium w-full px-4 py-2.5 rounded-xl outline-none text-sm"
+                            placeholder="Latitude 5420">
+                    </div>
+                    <div>
+                        <label class="label-premium">Procesador</label>
+                        <input id="pcProcesador"
+                            class="input-premium w-full px-4 py-2.5 rounded-xl outline-none text-sm"
+                            placeholder="Core i7">
+                    </div>
+                    <div>
+                        <label class="label-premium">Serial</label>
+                        <input id="pcSerial" class="input-premium w-full px-4 py-2.5 rounded-xl outline-none text-sm"
+                            placeholder="S/N">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-xs font-black text-indigo-500 uppercase tracking-widest mb-5 flex items-center gap-2">
+                    <span class="w-8 h-[2px] bg-indigo-500"></span> 3. Estado y
+                    Ubicación
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="label-premium">Estado del Equipo</label>
+                        <select id="pcEstado" class="input-premium w-full px-4 py-2.5 rounded-xl outline-none text-sm">
+                            <option value="ACTIVO">✅ Activo</option>
+                            <option value="MANTENIMIENTO">🛠️
+                                Mantenimiento</option>
+                            <option value="INACTIVO">❌ Inactivo</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label-premium">Ubicación / Lugar</label>
+                        <select id="id_lugar" class="input-premium w-full px-4 py-2.5 rounded-xl outline-none text-sm">
+                            <option value>Seleccione lugar...</option>
+                            {% for lugar in lugares %}
+                            <option value="{{ lugar.id }}">{{ lugar.nombre
+                                }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="label-premium">Usuario Responsable</label>
+                        <select id="id_users" class="input-premium w-full px-4 py-2.5 rounded-xl outline-none text-sm">
+                            <option value>Seleccione usuario...</option>
+                            {% for usuario in usuarios %}
+                            <option value="{{ usuario.id }}">
+                                {{usuario.nombre}} {{usuario.apellido_p}} {{usuario.apellido_m}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-indigo-custom p-6 rounded-[2rem] border border-indigo-100 shadow-inner">
+                    <div class="flex justify-between items-center mb-5">
+                        <label class="text-[11px] font-black text-indigo-700 uppercase tracking-widest ml-1">Módulos
+                            RAM</label>
+                        <button onclick="addRamRow()"
+                            class="text-[10px] font-black bg-indigo-600 text-white px-3 py-1.5 rounded-xl shadow-lg hover:bg-indigo-700 transition-all">+
+                            AGREGAR</button>
+                    </div>
+                    <div id="ramContainer" class="space-y-4"></div>
+                </div>
+
+                <div class="bg-emerald-custom p-6 rounded-[2rem] border border-emerald-100 shadow-inner">
+                    <div class="flex justify-between items-center mb-5">
+                        <label
+                            class="text-[11px] font-black text-emerald-700 uppercase tracking-widest ml-1">Almacenamiento</label>
+                        <button onclick="addDiscoRow()"
+                            class="text-[10px] font-black bg-emerald-600 text-white px-3 py-1.5 rounded-xl shadow-lg hover:bg-emerald-700 transition-all">+
+                            AGREGAR</button>
+                    </div>
+                    <div id="discoContainer" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <div class="col-span-full">
+                <label class="label-premium">Observaciones Adicionales</label>
+                <textarea id="pcObservaciones_equipo" rows="3"
+                    class="input-premium h-24 resize-none p-4 w-full rounded-xl outline-none text-sm"
+                    placeholder="Detalles técnicos, estado físico al recibir, etc..."></textarea>
+            </div>
+        </div>
+
+        <div
+            class="p-8 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50 rounded-b-[2.5rem] sticky bottom-0">
+            <button onclick="closeModal()"
+                class="px-6 py-2.5 text-slate-500 font-black text-sm hover:bg-slate-100 rounded-xl transition-all">Cancelar</button>
+            <button onclick="saveData()" id="btnSave"
+                class="px-12 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-black text-sm shadow-xl shadow-indigo-200 hover:scale-[1.02] active:scale-95 transition-all">Guardar
+                en Inventario</button>
+        </div>
+    </div>
+</div>
+
+<div id="modalStock"
+    class="hidden fixed inset-0 z-[9999] w-screen h-screen bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4">
+
+    <div class="fixed inset-0 w-full h-full cursor-default" onclick="cerrarModalStock()"></div>
+
+    <div
+        class="relative bg-white p-8 rounded-[2.5rem] w-full max-w-[480px] shadow-2xl border border-white transform transition-all max-h-[90vh] overflow-y-auto custom-scrollbar">
+
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-indigo-200">
+                    📦</div>
+                <div>
+                    <h3 class="text-2xl font-black text-slate-800 tracking-tight">Nuevo
+                        Periférico</h3>
+                    <p class="text-[10px] text-indigo-500 font-bold uppercase tracking-widest">Ingreso
+                        a Bodega</p>
+                </div>
+            </div>
+            <button onclick="cerrarModalStock()" class="text-slate-400 hover:text-rose-500 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <div id="contenido-stock" class="space-y-5">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Tipo
+                        de Equipo</label>
+                    <input id="periTipo" type="text" placeholder="Ej: Monitor" class="input-premium-stock">
+                </div>
+                <div>
+                    <label
+                        class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Código
+                        AEC</label>
+                    <input id="periAec" type="text" placeholder="Ej: 10250" class="input-premium-stock">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label
+                        class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Marca</label>
+                    <input id="periMarca" type="text" placeholder="Ej: Logitech" class="input-premium-stock">
+                </div>
+                <div>
+                    <label
+                        class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Modelo</label>
+                    <input id="periModelo" type="text" placeholder="Ej: G502" class="input-premium-stock">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Número
+                    de Serial</label>
+                <input id="periSerial" type="text" placeholder="S/N del fabricante" class="input-premium-stock">
+            </div>
+
+            <div class="col-span-full">
+                <label class="label-premium">Observaciones Adicionales</label>
+                <textarea id="pcObservaciones_stock" rows="3"
+                    class="input-premium h-24 resize-none p-4 w-full rounded-xl outline-none text-sm"
+                    placeholder="Detalles técnicos, estado físico al recibir, etc..."></textarea>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-3 mt-8">
+            <button onclick="addGlobalComp()"
+                class="w-full flex justify-center items-center gap-2 px-4 py-4 bg-gradient-to-r from-indigo-600 to-violet-700 text-white rounded-[1.5rem] font-bold shadow-xl shadow-indigo-200 hover:scale-[1.02] active:scale-95 transition-all">
+                <span>➕</span> Añadir al Inventario
+            </button>
+
+            <button onclick="cerrarModalStock()"
+                class="w-full py-3 text-slate-400 font-bold text-sm hover:text-slate-600 transition-all underline underline-offset-4 decoration-slate-200">
+                Cancelar y Salir
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal oculto -->
+<div id="modal-subir-excel"
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 z-[100]">
+
+    <div id="modal-content-excel"
+        class="bg-white rounded-2xl p-8 w-[400px] relative scale-90 transition-transform duration-300 shadow-2xl">
+
+        <h2 class="text-xl font-bold text-slate-800 mb-2">Importar Equipos</h2>
+        <p class="text-sm text-slate-500 mb-6">Sube un archivo Excel para cargar equipos masivamente.</p>
+
+        <a href="{% static 'plantillas/equipos.xlsx' %}" download
+            class="flex items-center justify-center gap-2 mb-6 px-4 py-3 text-center bg-emerald-50 text-emerald-700 rounded-xl font-bold hover:bg-emerald-100 transition-colors border border-emerald-100">
+            <span>📥</span> Descargar plantilla base
+        </a>
+
+        <hr class="mb-6 border-slate-100">
+
+        <form id="form-subir-excel" action="" method="POST"
+            enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <label class="block mb-2 text-sm font-semibold text-slate-700">Selecciona el archivo:</label>
+            <input type="file" name="archivo" accept=".xlsx, .xls" required class="mb-6 block w-full text-sm text-slate-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-semibold
+                file:bg-indigo-50 file:text-indigo-700
+                hover:file:bg-indigo-100
+                cursor-pointer">
+
+            <button type="submit"
+                class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-95">
+                🚀 Subir e Importar
+            </button>
+        </form>
+
+        <button onclick="cerrarModalSubirExcel()"
+            class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 hover:bg-slate-100 w-8 h-8 flex items-center justify-center rounded-full transition-colors text-2xl">
+            &times;
+        </button>
+    </div>
+</div>
+
+<script src="{% static 'js/equipo/modal_agregar_equipo.js' %}"></script>
+<script src="{% static 'js/equipo/modal_componente.js' %}"></script>
+<script src="{% static 'js/equipo/list_equipos.js' %}"></script>
+<script src="{% static 'js/equipo/subir_excel.js' %}"></script>
