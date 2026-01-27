@@ -10,17 +10,21 @@ User = get_user_model()
 # =========================
 # LISTA DE EQUIPOS
 # =========================
+
 def lista_equipos(request):
     equipos = Equipo.objects.all().prefetch_related('rams', 'discos')
     lugares = Lugar.objects.all()
     usuarios = User.objects.all()
     
+    # Extraer mensajes de la sesión si existen
+    mensajes_importacion = request.session.pop('mensajes_importacion', None)
+    
     return render(request, 'equipo/inventario_equipos.html', {
         'equipos': equipos,
         'lugares': lugares,
-        'usuarios': usuarios
+        'usuarios': usuarios,
+        'mensajes_importacion': mensajes_importacion # Pasar al template
     })
-
 
 # =========================
 # GUARDAR EQUIPO
@@ -165,36 +169,168 @@ def eliminar_equipo(request, id_equipo):
 
 
 
-# apps/equipo/views.py
-import pandas as pd
-from django.shortcuts import render
-from django.contrib import messages
-from django.db import transaction
-from apps.equipo.models import Equipo, Ram, Disco
-from apps.lugar.models import Lugar
-from django.contrib.auth import get_user_model
-
 User = get_user_model()
 # =========================
 # IMPORTAR EXCEL
 # =========================
 import pandas as pd
-from django.shortcuts import render, redirect
-from django.contrib import messages
 from django.db import transaction
-from .models import Equipo, Ram, Disco
-from apps.lugar.models import Lugar
+from django.http import JsonResponse
+from .models import Equipo, Ram, Disco, Componente, Lugar
+
+
+import pandas as pd
+import re
+from django.db import transaction
+from django.http import JsonResponse
 from django.contrib.auth import get_user_model
+from .models import Equipo, Ram, Disco, Componente, Lugar
 
 User = get_user_model()
 
 import pandas as pd
-from django.shortcuts import render, redirect
-from django.contrib import messages
+import re
 from django.db import transaction
-from .models import Equipo, Ram, Disco
-from apps.lugar.models import Lugar
+from django.http import JsonResponse
 from django.contrib.auth import get_user_model
+from .models import Equipo, Ram, Disco, Componente, Lugar
 
 User = get_user_model()
+
+def importar_excel_equipos(request):
+    if request.method == "POST" and request.FILES.get('archivo'):
+        archivo = request.FILES['archivo']
+        
+        try:
+            # header=1 indica que la cabecera está en la fila 2 del Excel (índice 1)
+            # Los datos empezarán automáticamente desde la fila 3
+            df = pd.read_excel(archivo, header=1, dtype=str).fillna('')
+            
+            # Limpiar nombres de columnas por si tienen espacios accidentales
+            df.columns = [str(c).strip() for c in df.columns]
+
+            registros_creados = 0
+            
+            with transaction.atomic():
+                for index, row in df.iterrows():
+                    # Usamos el nombre exacto que pusiste en tu ejemplo
+                    serial_pc = row.get('SERIAL', '').strip()
+                    
+                    # Si no hay serial, saltamos la fila (puede ser una fila vacía al final)
+                    if not serial_pc or serial_pc == '':
+                        continue
+
+                    # 1. Buscar Usuario por AEC USUARIO
+                    aec_user = row.get('AEC USUARIO', '').strip()
+                    usuario_obj = User.objects.filter(username=aec_user).first()
+                    
+                    # 2. Gestionar Lugar
+                    lugar_nombre = row.get('LUGAR', '').split(',')[0].strip()
+                    lugar_obj = None
+                    if lugar_nombre:
+                        lugar_obj, _ = Lugar.objects.get_or_create(nombre=lugar_nombre)
+
+                    # 3. Crear o Actualizar Equipo Principal
+                    # IMPORTANTE: update_or_create busca por 'serial'
+                    equipo, created = Equipo.objects.update_or_create(
+                        serial=serial_pc,
+                        defaults={
+                            'aec': row.get('AEC EQUIPO', '').strip(),
+                            'tipo': row.get('TIPO DE EQUIPO', 'CPU').strip(),
+                            'marca': row.get('MARCA', '').strip(),
+                            'modelo': row.get('MODELO', '').strip(),
+                            'sistema_operativo': row.get('SISTEMA OPERATIVO', '').strip(),
+                            'procesador': row.get('PROCESADOR', '').strip(),
+                            'ip': row.get('IP USUARIO', '').strip() or None,
+                            'estado_equipo': row.get('ESTADO', 'ACTIVO').strip().upper(),
+                            'observaciones': row.get('OBSERVACIONES', '').strip(),
+                            'id_users': usuario_obj,
+                            'id_lugar': lugar_obj,
+                        }
+                    )
+
+                    # 4. Procesar RAM (Múltiples)
+                    txt_ram = row.get('MEMORIA RAM', '')
+                    if txt_ram:
+                        Ram.objects.filter(equipo=equipo).delete()
+                        partes = [p.strip() for p in txt_ram.split(',') if p.strip()]
+                        for i in range(0, len(partes), 3):
+                            if i < len(partes):
+                                frec_str = partes[i+2] if i+2 < len(partes) else ""
+                                nums = re.findall(r'\d+', frec_str)
+                                frec_int = int(nums[0]) if nums else None
+                                
+                                Ram.objects.create(
+                                    equipo=equipo,
+                                    capacidad=partes[i],
+                                    tipo=partes[i+1] if i+1 < len(partes) else 'DDR4',
+                                    frecuencia=frec_int
+                                )
+
+                    # 5. Procesar DISCOS (Múltiples)
+                    txt_disco = row.get('DISCO DURO', '')
+                    if txt_disco:
+                        Disco.objects.filter(equipo=equipo).delete()
+                        partes = [p.strip() for p in txt_disco.split(',') if p.strip()]
+                        for i in range(0, len(partes), 3):
+                            if i < len(partes):
+                                Disco.objects.create(
+                                    equipo=equipo,
+                                    capacidad=partes[i],
+                                    tipo=partes[i+1] if i+1 < len(partes) else 'SSD',
+                                    estado=partes[i+2] if i+2 < len(partes) else 'ACTIVO'
+                                )
+
+                    # 6. Procesar Componentes Periféricos
+                    # Buscamos todas las columnas que se llamen "COMPONENTE"
+                    idx_componentes = [i for i, col in enumerate(df.columns) if "COMPONENTE" in col.upper()]
+                    
+                    for start_idx in idx_componentes:
+                        tipo_comp = row.iloc[start_idx]
+                        if tipo_comp and str(tipo_comp).strip():
+                            # Según tu orden: COMPONENTE(0), AEC(1), MARCA(2), MODELO(3), SERIAL(4), ESTADO(5), OBS(6)
+                            s_comp = str(row.iloc[start_idx+4]).strip()
+                            if s_comp and s_comp != '':
+                                Componente.objects.update_or_create(
+                                    serial=s_comp,
+                                    defaults={
+                                        'id_equipo': equipo,
+                                        'tipo': tipo_comp,
+                                        'aec': row.iloc[start_idx+1],
+                                        'marca': row.iloc[start_idx+2],
+                                        'modelo': row.iloc[start_idx+3],
+                                        'estado': str(row.iloc[start_idx+5]).strip().upper() or 'ACTIVO',
+                                        'observaciones': row.iloc[start_idx+6],
+                                        'id_users': usuario_obj,
+                                        'id_lugar': lugar_obj
+                                    }
+                                )
+                    
+                    registros_creados += 1
+                    print(f"--> Procesado exitosamente: {serial_pc}")
+
+            return JsonResponse({
+                'status': 'success', 
+                'message': f'Se procesaron {registros_creados} filas correctamente.'
+            })
+
+        except Exception as e:
+            print(f"!!! ERROR EN IMPORTACIÓN: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': f"Error técnico: {str(e)}"}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'No se recibió el archivo'}, status=400)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

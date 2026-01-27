@@ -1,131 +1,234 @@
 {% load static %}
-{% block content %}
-<div class="container mx-auto px-4 py-6">
-    <div class="mb-6 flex justify-between items-center">
-        <h1 class="text-2xl font-bold"> Usuarios
-        </h1>
-        <div class="space-x-4 flex justify-between">
+
+{% if not request.htmx %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-slate-800 tracking-tight">Gestión de Usuarios</h1>
+            <p class="text-sm text-slate-500 font-medium">Personal y Permisos del Sistema</p>
+        </div>
+        <div class="flex gap-3">
             <button
-                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onclick="openUserModal()">
-                <i class="fa-solid fa-plus mr-2"></i> Añadir Usuarios
+                class="group flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all"
+                onclick="openModal('agregar_usuario')">
+                <i class="fa-solid fa-user-plus group-hover:scale-110 transition-transform"></i>
+                Nuevo Usuario
             </button>
         </div>
-
     </div>
 
-</div>
+    <div id="dynamic-content" class="max-w-4xl mx-auto space-y-6">
+{% endif %}
 
-<div class="container mx-auto px-4 py-6">
-    <h1 class="text-2xl font-bold mb-4">Lista de Usuarios</h1>
-    <div class="overflow-auto rounded-lg shadow-lg border border-gray-200 ">
-        <table class="min-w-full bg-white text-sm">
-            <thead class="bg-blue-600 text-white sticky top-0 z-10">
-                <tr>
-                    <th class="px-4 py-2 text-left uppercase text-sm">N°</th>
-                    <th class="px-4 py-2 text-left uppercase text-sm">Codigo</th>
-                    <th class="px-4 py-2 text-left uppercase text-sm">Usuario</th>
-                    <th class="px-4 py-2 text-left uppercase text-sm">Rol</th>
-                    <th class="px-4 py-2 text-left uppercase text-sm">Equipo</th>
-                    <th class="px-4 py-2 text-left uppercase text-sm">Lugar</th>
-                    <th class="px-4 py-2 text-left uppercase text-sm">Area</th>
-                    <th class="px-4 py-2 text-left uppercase text-sm">Estado</th>
-                    <th class="px-4 py-2 text-left uppercase text-sm">Firma</th>
-                    <th class="px-4 py-2 text-left uppercase text-sm">Acciones</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                {% for user in users %}
-                <tr class="hover:bg-gray-100">
-                    <td class="px-4 py-2">{{ forloop.counter }}</td>
-                    <td class="px-4 py-2">{% if user.codigo %}
-                        {{ user.codigo }}
-                        {% else %}
-                        <span class="text-gray-400">Sin Codigo asignado</span>
-                        {% endif %}
-                    </td>
-                    <td class="px-4 py-2">{{ user.username }}</td>
-                    <td class="px-4 py-2">{{ user.role }}</td>
-                    <td class="px-4 py-2">{% if user.id_equipo %}
-                        {{ user.id_equipo.aec }}
-                        {% else %}
-                        <span class="text-gray-400">Sin equipo asignado</span>
-                        {% endif %}
-                    </td>
-                    <td class="px-4 py-2"> {% if user.id_lugar %}
-                        {{ user.id_lugar.nombre }}
-                        {% else %}
-                        <span class="text-gray-400">Sin lugar asignado</span>
-                        {% endif %}
-                    </td>
-                    <td class="px-4 py-2">{% if user.id_lugar %}
-                        {{ user.id_lugar.area }}
-                        {% else %}
-                        <span class="text-gray-400">Sin área asignada</span>
-                        {% endif %}
-                    </td>
-                    <td class="px-4 py-2">
-                        {% if user.is_active == 1 %}
-                        <span class="px-3 py-1 rounded-full bg-green-500 text-white font-semibold">
-                            {{ "Activo"}}</span>
-                        {% else %}
-                        <span class="px-3 py-1 rounded-full bg-red-500 text-white font-semibold">
-                            {{ "Inactivo"}}</span>
-                        {% endif %}
-                    </td>
-                    <td class="px-4 py-2">
-                        {% if user.firma %}
-                        <button onclick="openFirmaModal('{{ user.firma.url }}')">
-                            <img src="{{ user.firma.url }}" alt="Firma de {{ user.username }}"
-                                class="w-10 h-10 object-cover rounded-full cursor-pointer border-2 border-blue-500">
-                        </button>
-                        {% else %}
-                        <p>No hay firma</p>
-                        {% endif %}
-                    </td>
-                    <th class="px-4 py-2 text-left uppercase text-sm"></th>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="10" class="px-4 py-6 text-center text-gray-400">No hay Usuarios registrados</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+        {# --- BLOQUE DINÁMICO: AGRUPADO POR LUGAR --- #}
+        {# Agrupamos por el objeto id_lugar para acceder a nombre y área #}
+        {% regroup usuarios by id_lugar as lugar_list %}
 
+        {% for grupo in lugar_list %}
+        <div class="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden mb-4">
+            {# ID único usando el contador del loop para el colapsable #}
+            <button onclick="toggleElement('lugar-{{ forloop.counter }}', 'icon-lugar-{{ forloop.counter }}')"
+                class="w-full p-6 bg-slate-900 text-left relative overflow-hidden group transition-all hover:bg-slate-800">
 
-<!-- Modal FIRMA -->
-<div id="firmaModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-    <div class="bg-white p-4 rounded shadow-lg relative">
-        <button onclick="closeFirmaModal()"
-            class="absolute top-2 right-2 text-gray-600 hover:text-black">&times;</button>
-        <img id="firmaModalImg" src="" alt="Firma" class="max-w-full max-h-[80vh]">
-    </div>
-</div>
+                <div class="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
 
+                <div class="relative flex flex-col md:flex-row items-center gap-6">
+                    <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
+                        <i class="fa-solid fa-location-dot text-slate-800 text-2xl"></i>
+                    </div>
 
-<!-- Modal USUARIO -->
-<div id="userModal"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center {% if not form.errors %}hidden{% endif %} z-50">
+                    <div class="text-center md:text-left flex-1 min-w-0">
+                        <h2 class="text-xl font-black text-white tracking-tight leading-none uppercase">
+                            {# Mostramos el nombre del lugar desde el agrupador #}
+                            {{ grupo.grouper.nombre|default:"SIN UBICACIÓN" }}
+                        </h2>
+                        <span class="text-slate-500 text-[9px] font-bold uppercase tracking-[0.2em] mt-2 block">
+                            {# Mostramos el área desde el agrupador #}
+                            Área: {{ grupo.grouper.area|default:"PERSONAL EXTERNO / OTROS" }}
+                        </span>
+                    </div>
 
-    <div class="bg-white p-6 rounded shadow-lg relative w-11/12 max-w-lg overflow-y-auto" style="max-height: 90vh;">
+                    <div class="flex items-center gap-6">
+                        <div class="bg-slate-800/50 px-4 py-2 rounded-xl border border-slate-700 text-center">
+                            <p class="text-white text-xl font-black leading-none">{{ grupo.list|length }}</p>
+                            <p class="text-slate-500 text-[8px] font-bold uppercase tracking-widest">Personal</p>
+                        </div>
+                        <i id="icon-lugar-{{ forloop.counter }}"
+                            class="fa-solid fa-chevron-down text-white text-xl transition-transform duration-300"></i>
+                    </div>
+                </div>
+            </button>
 
-        <a href="{% url 'users:user_list' %}"
-            class="absolute top-2 right-2 text-gray-600 hover:text-black text-2xl">&times;</a>
+            <div id="lugar-{{ forloop.counter }}" class="hidden bg-slate-50 border-t border-slate-200">
+                <div class="p-4 space-y-3">
+                    {% for usuario in grupo.list %}
+                    <div
+                        class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:border-blue-200 transition-colors">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div
+                                class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0 overflow-hidden border border-blue-100">
+                                {% if usuario.firma %}
+                                <img src="{{ usuario.firma.url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                <i class="fa-solid fa-user text-lg"></i>
+                                {% endif %}
+                            </div>
 
-        <h2 id="modalTitle" class="text-xl font-bold mb-4">Agregar Usuario</h2>
+                            <div>
+                                <h4 class="text-sm font-black text-slate-700 uppercase tracking-tight">
+                                    {{ usuario.first_name }} {{ usuario.last_name }}
+                                    <span class="text-blue-500 text-xs font-medium ml-2">(@{{ usuario.username }})</span>
+                                </h4>
+                                <div class="flex gap-3 mt-1">
+                                    <p class="text-[9px] text-slate-400 font-bold uppercase">
+                                        <i class="fa-solid fa-id-card"></i> {{ usuario.codigo|default:"Sin Código" }}
+                                    </p>
+                                    <p class="text-[9px] text-blue-500 font-bold uppercase">
+                                        <i class="fa-solid fa-shield-halved"></i> {{ usuario.get_role_display }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
 
+                        <div class="flex items-center gap-2 border-l border-slate-100 pl-4">
+                            {# Corrección de URL name: editar_usuario_modal #}
+                            <button hx-get="{% url 'users:editar_usuario_modal' usuario.id %}"
+                                hx-target="#modal-edit-user-body" onclick="openModal('editar_usuario')"
+                                class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 hover:bg-blue-600 text-blue-600 hover:text-white rounded-lg transition-all text-[10px] font-black border border-blue-100">
+                                <i class="fa-solid fa-pen"></i> EDITAR
+                            </button>
+                            <button hx-post="{% url 'users:eliminar_usuario' usuario.id %}" hx-target="#dynamic-content"
+                                hx-trigger="confirmed" onclick="confirmDeleteUser(this)"
+                                class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 hover:bg-red-600 text-red-600 hover:text-white rounded-lg transition-all text-[10px] font-black border border-red-100">
+                                <i class="fa-solid fa-trash"></i> ELIMINAR
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="py-20 text-center border-2 border-dashed border-slate-200 rounded-3xl">
+            <i class="fa-solid fa-user-slash text-4xl text-slate-200 mb-4 block"></i>
+            <p class="text-slate-400 font-bold uppercase tracking-widest">No se encontraron usuarios registrados</p>
+        </div>
+        {% endfor %}
+
+{% if not request.htmx %}
     </div>
 </div>
 
+<div id="agregar_usuario" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden justify-center items-center z-50 p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
+        <div class="flex justify-between items-center px-8 py-6 border-b bg-slate-50">
+            <div>
+                <h2 class="text-xl font-black text-slate-800 uppercase tracking-tight">Nuevo Usuario</h2>
+                <p class="text-xs text-slate-500 font-bold">Complete la información del perfil</p>
+            </div>
+            <button class="text-slate-400 hover:text-slate-600 text-3xl"
+                onclick="closeModal('agregar_usuario')">&times;</button>
+        </div>
+        <div class="p-8">
+            <form hx-post="{% url 'users:user_list' %}" hx-target="#dynamic-content" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-2">Nombre de Usuario (Login)</label>
+                        <input type="text" name="username" class="w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none transition-all" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-2">Nombre(s)</label>
+                        <input type="text" name="nombre" class="w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-2">Apellido Paterno</label>
+                        <input type="text" name="apellido_p" class="w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-2">Rol del Sistema</label>
+                        <select name="role" class="w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500">
+                            <option value="admin">Administrador</option>
+                            <option value="tecnico">Técnico</option>
+                            <option value="usuario">Usuario Estándar</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-2">Código Personal</label>
+                        <input type="text" name="codigo" class="w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-2">Ubicación / Lugar</label>
+                        <select name="id_lugar" class="w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500">
+                            <option value="">Sin Asignar</option>
+                            {% for l in lugares %}
+                            <option value="{{ l.id_lugar }}">{{ l.nombre }} - {{ l.area }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-2">Imagen de Firma Digital</label>
+                        <input type="file" name="firma" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-8">
+                    <button type="button" class="px-6 py-3 rounded-xl border border-slate-200 font-bold text-slate-500 hover:bg-slate-50 transition-all" onclick="closeModal('agregar_usuario')">Cancelar</button>
+                    <button type="submit" onclick="closeModal('agregar_usuario')" class="px-6 py-3 rounded-xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">Crear Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
+<div id="editar_usuario" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden justify-center items-center z-50 p-4">
+    <div class="bg-white rounded-3xl shadow-xl w-full max-w-2xl overflow-hidden">
+        <div class="flex justify-between items-center px-8 py-6 border-b bg-slate-50">
+            <h2 class="text-xl font-black text-slate-800 uppercase tracking-tight">Editar Perfil</h2>
+            <button class="text-slate-400 hover:text-slate-600 text-3xl" onclick="closeModal('editar_usuario')">&times;</button>
+        </div>
+        <div id="modal-edit-user-body" class="p-8">
+            <div class="flex flex-col items-center py-10">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                <p class="mt-4 text-slate-500 font-bold text-xs uppercase tracking-widest">Cargando perfil...</p>
+            </div>
+        </div>
+    </div>
+</div>
 
+<script>
+    function toggleElement(id, iconId) {
+        const content = document.getElementById(id);
+        const icon = document.getElementById(iconId);
+        if (content && icon) {
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+    }
 
+    function confirmDeleteUser(button) {
+        Swal.fire({
+            title: '¿Eliminar Usuario?',
+            text: "Esta acción revocará todos los accesos de este usuario de forma permanente.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Sí, eliminar acceso',
+            cancelButtonText: 'Mantener'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                button.dispatchEvent(new CustomEvent('confirmed', { bubbles: true }));
+            }
+        });
+    }
 
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+    }
 
-<script src="{% static 'js/users/user_firma.js' %}"></script>
-<script src="{% static 'js/users/user_modal.js' %}"></script>
-
-{% endblock %}
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+    }
+</script>
+{% endif %}

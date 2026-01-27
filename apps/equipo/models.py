@@ -149,9 +149,9 @@ class Disco(models.Model):
         blank=True,
         related_name='discos'
     )
-    tipo = models.CharField(max_length=50)
+    tipo = models.CharField(max_length=50) #SSD HDD MV2
     capacidad = models.CharField(max_length=50)
-    rpm = models.IntegerField(blank=True, null=True)  # solo para HDD
+    rpm = models.IntegerField(blank=True, null=True)  # HDD
     estado = models.CharField(max_length=50, blank=True, null=True)
     observaciones = models.TextField(blank=True, null=True)
 
@@ -199,6 +199,7 @@ class Componente(AuditoriaFechas, AuditoriaUsuarios, SoftDeleteModel):
     ESTADOS = [
         ('ACTIVO', 'Activo'),
         ('INACTIVO', 'Inactivo'),
+        ('MANTENIMIENTO', 'Mantenimiento'),
     ]
 
     id_componente = models.AutoField(primary_key=True, db_column='id_componente')

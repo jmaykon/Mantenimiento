@@ -8,8 +8,10 @@ urlpatterns = [
     path('guardar/', views.guardar_equipo, name='guardar_equipo'),
     path('editar/<int:id_equipo>/', views.editar_equipo, name='editar_equipo'),
     path('eliminar/<int:id_equipo>/', views.eliminar_equipo, name='eliminar_equipo'),
-    #path("importar/", views.importar_equipos, name="importar_equipos"),
+    path('importar-excel/', views.importar_excel_equipos, name='importar_excel_equipos'),
     
-]  
+]
+    
+
 
 

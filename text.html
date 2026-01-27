@@ -1,237 +1,67 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario TI - SweetAlert2</title>
+    <title>SOALPRO - Sistemas</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        .input { @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition shadow-sm bg-white; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
     </style>
 </head>
+<body class="bg-slate-50 text-slate-900 p-6 flex justify-center items-center min-h-screen">
 
-<body class="bg-slate-100 p-6 font-sans">
-
-    <div class="max-w-6xl mx-auto" x-data="pcDashboard">
-
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+    <div class="max-w-md w-full">
+        <header class="mb-6 border-l-4 border-blue-600 pl-4 flex justify-between items-center">
             <div>
-                <h1 class="text-3xl md:text-4xl font-extrabold uppercase text-slate-900">Panel de Inventario</h1>
-                <p class="text-slate-500 text-sm mt-1">Control de equipos y periféricos</p>
+                <h1 class="text-xl font-extrabold tracking-tighter uppercase leading-none">SOALPRO</h1>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Infraestructura TI</p>
             </div>
-
-            <div class="flex flex-wrap gap-2">
-                <button @click="openAddPCModal()"
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold shadow-md transition transform hover:-translate-y-0.5">
-                    ➕ Agregar Equipo
-                </button>
-                <button @click="openAddComponentGlobal = true"
-                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg font-bold shadow-md transition transform hover:-translate-y-0.5">
-                    🖨️ Periférico Libre
-                </button>
+            <div class="w-10 h-10 bg-white rounded-full border border-slate-200 flex items-center justify-center shadow-sm">
+                <img src="https://cdn-icons-png.flaticon.com/512/3665/3665923.png" alt="Logo" class="w-6 h-6 opacity-80">
             </div>
-        </div>
+        </header>
 
-        <template x-for="(pc, index) in pcs" :key="pc.id">
-            <div class="bg-white rounded-2xl border shadow-md mb-5 overflow-hidden hover:shadow-lg transition">
-                <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
-                    <div @click="pc.open = !pc.open" class="flex items-center gap-3 cursor-pointer flex-1">
-                        <span class="text-2xl">🖥️</span>
-                        <div>
-                            <p class="font-bold text-lg md:text-xl" x-text="pc.tipo + ' - ' + pc.serial"></p>
-                            <p class="text-xs text-indigo-300 mt-0.5" x-text="'IP: ' + pc.ip"></p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold px-3 py-1 rounded-lg" :class="{
-                            'bg-green-600': pc.estado_equipo === 'ACTIVO',
-                            'bg-yellow-500': pc.estado_equipo === 'MANTENIMIENTO',
-                            'bg-red-600': pc.estado_equipo === 'INACTIVO'
-                        }" x-text="pc.estado_equipo"></span>
-                        
-                        <button @click="editPC(pc, index)" class="p-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition">✏️</button>
-                        <button @click="confirmDeletePC(index)" class="p-2 bg-red-600 rounded-lg hover:bg-red-700 transition">🗑️</button>
-                    </div>
+        <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm relative overflow-hidden">
+            <div class="flex justify-between items-start mb-8">
+                <div class="flex-1">
+                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Sistemas</h2>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">ID Ref: #001</p>
                 </div>
-
-                <div x-show="pc.open" x-collapse class="p-4 bg-slate-50">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs mb-4">
-                        <div><p class="uppercase text-slate-400 font-bold">Marca</p><p class="italic font-semibold" x-text="pc.marca"></p></div>
-                        <div><p class="uppercase text-slate-400 font-bold">Modelo</p><p class="italic font-semibold" x-text="pc.modelo"></p></div>
-                        <div><p class="uppercase text-slate-400 font-bold">S.O.</p><p class="italic font-semibold" x-text="pc.sistema_operativo"></p></div>
-                        <div><p class="uppercase text-slate-400 font-bold">Procesador</p><p class="italic font-semibold" x-text="pc.procesador"></p></div>
-                    </div>
-
-                    <div class="border-t pt-4 mt-4 text-xs">
-                        <div class="flex justify-between items-center mb-3">
-                            <p class="font-black uppercase text-slate-400">Periféricos Asociados</p>
-                            <button @click="openAddComp(pc)" class="font-bold text-indigo-600 hover:underline">➕ Agregar Periférico</button>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <template x-for="(comp, cIdx) in pc.componentes">
-                                <div class="border rounded-lg bg-white p-3 flex justify-between items-center shadow-sm">
-                                    <div class="font-bold text-sm" x-text="comp.tipo + ' (' + comp.marca + ')'"></div>
-                                    <button @click="confirmDeleteComp(pc, cIdx)" class="text-red-400 hover:text-red-600 font-bold">✕</button>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
-
-        <div x-show="openAddPC" x-transition class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-            <div class="bg-white p-6 md:p-8 rounded-2xl w-full max-w-4xl shadow-2xl relative max-h-[90vh] overflow-y-auto">
-                <h2 class="font-extrabold text-xl md:text-2xl mb-6" x-text="isEditing ? '✏️ Confirmar Edición' : '➕ Nuevo Equipo'"></h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <input x-model="newPC.tipo" placeholder="Tipo (PC, Laptop)" class="input">
-                    <input x-model="newPC.aec" placeholder="AEC" class="input">
-                    <input x-model="newPC.serial" placeholder="Serial" class="input">
-                    <input x-model="newPC.marca" placeholder="Marca" class="input">
-                    <input x-model="newPC.modelo" placeholder="Modelo" class="input">
-                    <input x-model="newPC.sistema_operativo" placeholder="S.O." class="input">
-                    <input x-model="newPC.procesador" placeholder="Procesador" class="input">
-                    <input x-model="newPC.ip" placeholder="IP" class="input">
-                    <select x-model="newPC.estado_equipo" class="input">
-                        <option value="ACTIVO">ACTIVO</option>
-                        <option value="MANTENIMIENTO">MANTENIMIENTO</option>
-                        <option value="INACTIVO">INACTIVO</option>
-                    </select>
-                </div>
-
-                <div class="mt-4 p-4 bg-slate-50 rounded-lg">
-                    <p class="font-bold mb-2 text-xs uppercase text-slate-500">Configuración RAM</p>
-                    <template x-for="(r,i) in rams" :key="'ram-'+i">
-                        <div class="flex gap-2 mb-2">
-                            <input x-model="r.capacidad" placeholder="Capacidad" class="input">
-                            <input x-model="r.tipo" placeholder="Tipo" class="input">
-                            <button @click="rams.splice(i,1)" class="text-red-500 px-2">✕</button>
-                        </div>
-                    </template>
-                    <button @click="rams.push({tipo:'',capacidad:''})" class="text-xs text-indigo-600 font-bold">+ Agregar RAM</button>
-                </div>
-
-                <div class="mt-4 p-4 bg-slate-50 rounded-lg">
-                    <p class="font-bold mb-2 text-xs uppercase text-slate-500">Configuración Discos</p>
-                    <template x-for="(d,i) in discos" :key="'disco-'+i">
-                        <div class="flex flex-col md:flex-row gap-2 mb-2">
-                            <input x-model="d.tipo" placeholder="Tipo" class="input">
-                            <input x-model="d.capacidad" placeholder="Capacidad" class="input">
-                            <input x-model="d.estado" placeholder="Estado (Nuevo/Usado)" class="input">
-                            <button @click="discos.splice(i,1)" class="text-red-500 px-2">✕</button>
-                        </div>
-                    </template>
-                    <button @click="discos.push({tipo:'',capacidad:'',estado:''})" class="text-xs text-indigo-600 font-bold">+ Agregar Disco</button>
-                </div>
-
-                <div class="flex justify-end gap-3 mt-6">
-                    <button @click="openAddPC=false" class="px-5 py-2 bg-gray-200 rounded-lg">Cancelar</button>
-                    <button @click="confirmSavePC()" class="bg-indigo-600 text-white px-8 py-2 rounded-lg font-bold shadow-md" x-text="isEditing ? 'Actualizar Equipo' : 'Guardar Equipo'"></button>
+                <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center border border-blue-100">
+                    <img src="https://cdn-icons-png.flaticon.com/512/10061/10061917.png" alt="Sistemas" class="w-10 h-10 object-contain">
                 </div>
             </div>
-        </div>
+            
+            <div class="space-y-5">
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter leading-none mb-1">Ubicación</p>
+                        <p class="font-bold text-slate-700">El Alto, Bolivia</p>
+                    </div>
+                </div>
 
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 border border-slate-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter leading-none mb-1">Dirección</p>
+                        <p class="font-bold text-slate-700 italic">Av. Jaime Mendoza</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-4 border-t border-slate-50 flex justify-between items-center">
+                <span class="text-[9px] font-bold text-slate-300 uppercase italic">Soalpro S.A. © 2026</span>
+            </div>
+        </div>
     </div>
 
-    <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('pcDashboard', () => ({
-                pcs: [],
-                openAddPC: false,
-                isEditing: false,
-                editIndex: null,
-                newPC: {},
-                rams: [],
-                discos: [],
-
-                openAddPCModal() {
-                    this.isEditing = false;
-                    this.newPC = { estado_equipo: 'ACTIVO' };
-                    this.rams = [{ tipo: '', capacidad: '' }];
-                    this.discos = [{ tipo: '', capacidad: '', estado: '' }];
-                    this.openAddPC = true;
-                },
-
-                editPC(pc, index) {
-                    this.isEditing = true;
-                    this.editIndex = index;
-                    this.newPC = { ...pc };
-                    this.rams = [...pc.ramData];
-                    this.discos = [...pc.discos];
-                    this.openAddPC = true;
-                },
-
-                // CONFIRMACIÓN AL GUARDAR O EDITAR
-                confirmSavePC() {
-                    const action = this.isEditing ? 'actualizar' : 'guardar';
-                    Swal.fire({
-                        title: `¿Deseas ${action} este equipo?`,
-                        text: "Verifica que los datos sean correctos",
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonColor: '#4f46e5',
-                        cancelButtonColor: '#6b7280',
-                        confirmButtonText: 'Sí, confirmar',
-                        cancelButtonText: 'Revisar'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            this.executeSave();
-                            Swal.fire('¡Éxito!', `El equipo ha sido ${action}ado.`, 'success');
-                        }
-                    });
-                },
-
-                executeSave() {
-                    const data = { ...this.newPC, ramData: [...this.rams], discos: [...this.discos], open: true };
-                    if (this.isEditing) {
-                        this.pcs[this.editIndex] = { ...data, componentes: this.pcs[this.editIndex].componentes || [] };
-                    } else {
-                        this.pcs.push({ ...data, id: Date.now(), componentes: [] });
-                    }
-                    this.openAddPC = false;
-                },
-
-                // CONFIRMACIÓN AL ELIMINAR PC
-                confirmDeletePC(index) {
-                    Swal.fire({
-                        title: '¿Estás seguro?',
-                        text: "Eliminarás este equipo y todos sus periféricos vinculados.",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#ef4444',
-                        cancelButtonColor: '#6b7280',
-                        confirmButtonText: 'Sí, eliminar equipo',
-                        cancelButtonText: 'Cancelar'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            this.pcs.splice(index, 1);
-                            Swal.fire('Eliminado', 'El equipo fue removido del inventario.', 'success');
-                        }
-                    });
-                },
-
-                // CONFIRMACIÓN AL ELIMINAR PERIFÉRICO
-                confirmDeleteComp(pc, cIdx) {
-                    Swal.fire({
-                        title: '¿Desvincular periférico?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Sí, quitar',
-                        cancelButtonText: 'Mantener'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            pc.componentes.splice(cIdx, 1);
-                        }
-                    });
-                }
-            }));
-        });
-    </script>
 </body>
 </html>

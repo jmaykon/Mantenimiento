@@ -1,0 +1,35 @@
+<form hx-post="{% url 'users:user_list' %}" hx-target="#dynamic-content" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="user_id" value="{{ u.id }}">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="md:col-span-2">
+            <label class="text-[10px] font-black text-slate-500 uppercase">Nombre Completo</label>
+            <input type="text" name="nombre" value="{{ u.first_name }}"
+                class="w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-2">
+        </div>
+        <div>
+            <label class="text-[10px] font-black text-slate-500 uppercase">Rol</label>
+            <select name="role" class="w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-2">
+                <option value="admin" {% if u.role=='admin' %}selected{% endif %}>Administrador</option>
+                <option value="tecnico" {% if u.role=='tecnico' %}selected{% endif %}>Técnico</option>
+                <option value="usuario" {% if u.role=='usuario' %}selected{% endif %}>Usuario</option>
+            </select>
+        </div>
+        <div>
+            <label class="text-[10px] font-black text-slate-500 uppercase">Lugar</label>
+            <select name="id_lugar" class="w-full bg-slate-50 border-slate-200 rounded-xl px-4 py-2">
+                {% for l in lugares %}
+                <option value="{{ l.id_lugar }}" {% if u.id_lugar_id==l.id_lugar %}selected{% endif %}>{{ l.area }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="flex justify-end gap-3 mt-6">
+        <button type="button" onclick="closeModal('editar_usuario')"
+            class="px-4 py-2 text-slate-400 font-bold">Cerrar</button>
+        <button type="submit" onclick="closeModal('editar_usuario')"
+            class="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-100">Guardar
+            Cambios</button>
+    </div>
+</form>
